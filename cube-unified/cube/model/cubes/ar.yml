@@ -1,0 +1,291 @@
+# 本文件由 build_cube_model.py 从 ar_semantic.yaml 自动生成
+# 不要手改 —— 改 ar_semantic.yaml 然后重跑生成脚本
+
+cubes:
+- name: ar_open_items
+  title: 应收账款未清明细（三时点）
+  description: 应收账款未清明细（三时点）（粒度：凭证行项目（客户 × 凭证 × 行））
+  sql: "WITH\npool_cur AS (\n  SELECT belnr, docln, kunnr, is_ab, ksl, netdt, augbl\n  FROM dwh_dwd.dwd_sap_finance_open_items_tmp_30ma\n  WHERE budat <= DATE_FORMAT(NOW(), '%Y%m%d')\n    AND kunnr IS NOT NULL AND kunnr <> ''\n    AND netdt IS NOT NULL AND netdt <> '' AND netdt <> '00000000'\n),\npool_last AS (\n  SELECT belnr, docln, kunnr, is_ab, ksl, netdt, augbl\n  FROM dwh_dwd.dwd_sap_finance_open_items_tmp_30ma\n  WHERE budat <= DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d')\n    AND kunnr IS NOT NULL AND kunnr <> ''\n    AND netdt IS NOT NULL AND netdt <> '' AND netdt <> '00000000'\n),\npool_last2 AS (\n  SELECT belnr, docln, kunnr, is_ab, ksl, netdt, augbl\n  FROM dwh_dwd.dwd_sap_finance_open_items_tmp_30ma\n  WHERE budat <= DATE_FORMAT(DATE_SUB(DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 MONTH), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d')\n    AND kunnr IS NOT NULL AND kunnr <> ''\n    AND netdt IS NOT NULL AND netdt <> '' AND netdt <> '00000000'\n),\nab_cur AS (\n  SELECT kunnr, belnr, docln, ksl, netdt AS t_netdt\n  FROM dwh_dwd.dwd_sap_finance_open_items_tmp_30ma\n  WHERE racct IN ('1122010001','1122010002','1122010003','1221020000','2203010001','2203010002','2203010009','1122010005','1221010099','1122010004') AND kunnr NOT IN ('D00143','D00161','D00162','D00211','D00241','D00247','D10071','D60001','D60004','D60006','D60007','D60008','D60010','D60011','D60016','D60017','D60018','D60019','D60020','D60022','D60023','D60024','D60025','D60027')\n    AND kunnr IS NOT NULL AND kunnr <> ''\n    AND netdt IS NOT NULL AND netdt <> '' AND netdt <> '00000000'\n    AND is_ab = 1\n    AND budat <= DATE_FORMAT(NOW(), '%Y%m%d')\n    AND (augbl IS NULL OR augbl = '' OR augdt > DATE_FORMAT(NOW(), '%Y%m%d'))\n),\nab_last AS (\n  SELECT kunnr, belnr, docln, ksl, netdt AS t_netdt\n  FROM dwh_dwd.dwd_sap_finance_open_items_tmp_30ma\n  WHERE racct IN ('1122010001','1122010002','1122010003','1221020000','2203010001','2203010002','2203010009','1122010005','1221010099','1122010004') AND kunnr NOT IN ('D00143','D00161','D00162','D00211','D00241','D00247','D10071','D60001','D60004','D60006','D60007','D60008','D60010','D60011','D60016','D60017','D60018','D60019','D60020','D60022','D60023','D60024','D60025','D60027')\n    AND kunnr IS NOT NULL AND kunnr <> ''\n    AND netdt IS NOT NULL AND netdt <> '' AND netdt <> '00000000'\n    AND is_ab = 1\n    AND budat <= DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d')\n    AND (augbl IS NULL OR augbl = '' OR augdt > DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d'))\n),\nab_last2 AS (\n  SELECT kunnr, belnr, docln, ksl, netdt AS t_netdt\n  FROM dwh_dwd.dwd_sap_finance_open_items_tmp_30ma\n  WHERE racct IN ('1122010001','1122010002','1122010003','1221020000','2203010001','2203010002','2203010009','1122010005','1221010099','1122010004') AND kunnr NOT IN ('D00143','D00161','D00162','D00211','D00241','D00247','D10071','D60001','D60004','D60006','D60007','D60008','D60010','D60011','D60016','D60017','D60018','D60019','D60020','D60022','D60023','D60024','D60025','D60027')\n    AND kunnr IS NOT NULL AND kunnr <> ''\n    AND netdt IS NOT NULL AND netdt <> '' AND netdt <> '00000000'\n    AND is_ab = 1\n    AND budat <= DATE_FORMAT(DATE_SUB(DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 MONTH), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d')\n    AND (augbl IS NULL OR augbl = '' OR augdt > DATE_FORMAT(DATE_SUB(DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 MONTH), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d'))\n),\nl1_cur AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt,\n         c_belnr AS p1_belnr, c_netdt AS p1_netdt, c_ab AS p1_ab, c_augbl AS p1_augbl\n  FROM (\n    SELECT t.kunnr, t.belnr, t.docln, t.ksl, t.t_netdt,\n           p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY t.kunnr, t.belnr, t.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM ab_cur t\n\
+    \    JOIN pool_cur p ON p.augbl = t.belnr AND p.kunnr = t.kunnr\n      AND ((t.ksl >= 0 AND p.ksl >= 0) OR (t.ksl < 0 AND p.ksl < 0)) AND p.belnr <> t.belnr\n  ) x WHERE rn = 1\n),\nl2_cur AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab,\n         c_belnr AS p2_belnr, c_netdt AS p2_netdt, c_ab AS p2_ab, c_augbl AS p2_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l1_cur s\n    LEFT JOIN pool_cur p ON p.augbl = s.p1_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0)) AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl3_cur AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab,\n         c_belnr AS p3_belnr, c_netdt AS p3_netdt, c_ab AS p3_ab, c_augbl AS p3_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l2_cur s\n    LEFT JOIN pool_cur p ON p.augbl = s.p2_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p2_belnr AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl4_cur AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab, p3_belnr, p3_netdt, p3_ab,\n         c_belnr AS p4_belnr, c_netdt AS p4_netdt, c_ab AS p4_ab, c_augbl AS p4_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l3_cur s\n    LEFT JOIN pool_cur p ON p.augbl = s.p3_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p3_belnr AND p.belnr <> s.p2_belnr AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl5_cur AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab, p3_belnr, p3_netdt, p3_ab, p4_belnr, p4_netdt, p4_ab,\n         c_belnr AS p5_belnr, c_netdt AS p5_netdt, c_ab AS p5_ab\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l4_cur s\n    LEFT JOIN pool_cur p ON p.augbl = s.p4_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p4_belnr AND p.belnr <> s.p3_belnr AND p.belnr <> s.p2_belnr\n      AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\ntraced_cur AS (\n  SELECT kunnr, belnr, docln,\n         COALESCE(\n           CASE WHEN p5_ab = 0 THEN p5_netdt END,\n           CASE WHEN p4_ab = 0 THEN p4_netdt END,\n           CASE WHEN p3_ab = 0 THEN p3_netdt END,\n           CASE WHEN p2_ab = 0 THEN p2_netdt END,\n           CASE WHEN p1_ab = 0 THEN p1_netdt END,\n           p5_netdt, p4_netdt, p3_netdt, p2_netdt, p1_netdt, t_netdt\n         ) AS final_netdt\n  FROM l5_cur\n),\nl1_last AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt,\n         c_belnr AS p1_belnr, c_netdt AS p1_netdt, c_ab AS p1_ab, c_augbl AS p1_augbl\n  FROM (\n    SELECT t.kunnr, t.belnr, t.docln, t.ksl, t.t_netdt,\n           p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY t.kunnr, t.belnr, t.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM ab_last t\n    JOIN pool_last p ON p.augbl = t.belnr\
+    \ AND p.kunnr = t.kunnr\n      AND ((t.ksl >= 0 AND p.ksl >= 0) OR (t.ksl < 0 AND p.ksl < 0)) AND p.belnr <> t.belnr\n  ) x WHERE rn = 1\n),\nl2_last AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab,\n         c_belnr AS p2_belnr, c_netdt AS p2_netdt, c_ab AS p2_ab, c_augbl AS p2_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l1_last s\n    LEFT JOIN pool_last p ON p.augbl = s.p1_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0)) AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl3_last AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab,\n         c_belnr AS p3_belnr, c_netdt AS p3_netdt, c_ab AS p3_ab, c_augbl AS p3_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l2_last s\n    LEFT JOIN pool_last p ON p.augbl = s.p2_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p2_belnr AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl4_last AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab, p3_belnr, p3_netdt, p3_ab,\n         c_belnr AS p4_belnr, c_netdt AS p4_netdt, c_ab AS p4_ab, c_augbl AS p4_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l3_last s\n    LEFT JOIN pool_last p ON p.augbl = s.p3_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p3_belnr AND p.belnr <> s.p2_belnr AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl5_last AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab, p3_belnr, p3_netdt, p3_ab, p4_belnr, p4_netdt, p4_ab,\n         c_belnr AS p5_belnr, c_netdt AS p5_netdt, c_ab AS p5_ab\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l4_last s\n    LEFT JOIN pool_last p ON p.augbl = s.p4_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p4_belnr AND p.belnr <> s.p3_belnr AND p.belnr <> s.p2_belnr\n      AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\ntraced_last AS (\n  SELECT kunnr, belnr, docln,\n         COALESCE(\n           CASE WHEN p5_ab = 0 THEN p5_netdt END,\n           CASE WHEN p4_ab = 0 THEN p4_netdt END,\n           CASE WHEN p3_ab = 0 THEN p3_netdt END,\n           CASE WHEN p2_ab = 0 THEN p2_netdt END,\n           CASE WHEN p1_ab = 0 THEN p1_netdt END,\n           p5_netdt, p4_netdt, p3_netdt, p2_netdt, p1_netdt, t_netdt\n         ) AS final_netdt\n  FROM l5_last\n),\nl1_last2 AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt,\n         c_belnr AS p1_belnr, c_netdt AS p1_netdt, c_ab AS p1_ab, c_augbl AS p1_augbl\n  FROM (\n    SELECT t.kunnr, t.belnr, t.docln, t.ksl, t.t_netdt,\n           p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY t.kunnr, t.belnr, t.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM ab_last2 t\n    JOIN pool_last2 p ON p.augbl = t.belnr AND p.kunnr = t.kunnr\n\
+    \      AND ((t.ksl >= 0 AND p.ksl >= 0) OR (t.ksl < 0 AND p.ksl < 0)) AND p.belnr <> t.belnr\n  ) x WHERE rn = 1\n),\nl2_last2 AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab,\n         c_belnr AS p2_belnr, c_netdt AS p2_netdt, c_ab AS p2_ab, c_augbl AS p2_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l1_last2 s\n    LEFT JOIN pool_last2 p ON p.augbl = s.p1_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0)) AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl3_last2 AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab,\n         c_belnr AS p3_belnr, c_netdt AS p3_netdt, c_ab AS p3_ab, c_augbl AS p3_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l2_last2 s\n    LEFT JOIN pool_last2 p ON p.augbl = s.p2_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p2_belnr AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl4_last2 AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab, p3_belnr, p3_netdt, p3_ab,\n         c_belnr AS p4_belnr, c_netdt AS p4_netdt, c_ab AS p4_ab, c_augbl AS p4_augbl\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab, p.augbl AS c_augbl,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l3_last2 s\n    LEFT JOIN pool_last2 p ON p.augbl = s.p3_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p3_belnr AND p.belnr <> s.p2_belnr AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\nl5_last2 AS (\n  SELECT kunnr, belnr, docln, ksl, t_netdt, p1_belnr, p1_netdt, p1_ab, p2_belnr, p2_netdt, p2_ab, p3_belnr, p3_netdt, p3_ab, p4_belnr, p4_netdt, p4_ab,\n         c_belnr AS p5_belnr, c_netdt AS p5_netdt, c_ab AS p5_ab\n  FROM (\n    SELECT s.*, p.belnr AS c_belnr, p.netdt AS c_netdt, p.is_ab AS c_ab,\n           ROW_NUMBER() OVER (PARTITION BY s.kunnr, s.belnr, s.docln\n             ORDER BY CASE WHEN p.is_ab = 0 THEN 1 ELSE 2 END, p.netdt DESC) AS rn\n    FROM l4_last2 s\n    LEFT JOIN pool_last2 p ON p.augbl = s.p4_belnr AND p.kunnr = s.kunnr\n      AND ((s.ksl >= 0 AND p.ksl >= 0) OR (s.ksl < 0 AND p.ksl < 0))\n      AND p.belnr <> s.p4_belnr AND p.belnr <> s.p3_belnr AND p.belnr <> s.p2_belnr\n      AND p.belnr <> s.p1_belnr AND p.belnr <> s.belnr\n  ) x WHERE rn = 1\n),\ntraced_last2 AS (\n  SELECT kunnr, belnr, docln,\n         COALESCE(\n           CASE WHEN p5_ab = 0 THEN p5_netdt END,\n           CASE WHEN p4_ab = 0 THEN p4_netdt END,\n           CASE WHEN p3_ab = 0 THEN p3_netdt END,\n           CASE WHEN p2_ab = 0 THEN p2_netdt END,\n           CASE WHEN p1_ab = 0 THEN p1_netdt END,\n           p5_netdt, p4_netdt, p3_netdt, p2_netdt, p1_netdt, t_netdt\n         ) AS final_netdt\n  FROM l5_last2\n),\nbase AS (\n  SELECT kunnr, belnr, docln, name1, ksl, netdt,\n         CASE WHEN budat <= DATE_FORMAT(NOW(), '%Y%m%d')\n               AND (augbl IS NULL OR augbl = '' OR augdt > DATE_FORMAT(NOW(), '%Y%m%d'))\n              THEN 1 ELSE 0 END AS open_cur,\n         CASE WHEN budat <= DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d')\n               AND (augbl IS NULL OR augbl = '' OR augdt > DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d'))\n              THEN 1 ELSE 0 END AS open_last,\n\
+    \         CASE WHEN budat <= DATE_FORMAT(DATE_SUB(DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 MONTH), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d')\n               AND (augbl IS NULL OR augbl = '' OR augdt > DATE_FORMAT(DATE_SUB(DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 MONTH), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d'))\n              THEN 1 ELSE 0 END AS open_last2\n  FROM dwh_dwd.dwd_sap_finance_open_items_tmp_30ma\n  WHERE racct IN ('1122010001','1122010002','1122010003','1221020000','2203010001','2203010002','2203010009','1122010005','1221010099','1122010004') AND kunnr NOT IN ('D00143','D00161','D00162','D00211','D00241','D00247','D10071','D60001','D60004','D60006','D60007','D60008','D60010','D60011','D60016','D60017','D60018','D60019','D60020','D60022','D60023','D60024','D60025','D60027')\n    AND kunnr IS NOT NULL AND kunnr <> ''\n    AND netdt IS NOT NULL AND netdt <> '' AND netdt <> '00000000'\n),\nfinal AS (\n  SELECT b.kunnr, b.name1, b.ksl, b.open_cur, b.open_last, b.open_last2,\n         DATEDIFF(\n           STR_TO_DATE(DATE_FORMAT(NOW(), '%Y%m%d'), '%Y%m%d'),\n           STR_TO_DATE(COALESCE(tc.final_netdt, b.netdt), '%Y%m%d')) AS aging_cur,\n         DATEDIFF(\n           STR_TO_DATE(DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d'), '%Y%m%d'),\n           STR_TO_DATE(COALESCE(tl.final_netdt, b.netdt), '%Y%m%d')) AS aging_last,\n         DATEDIFF(\n           STR_TO_DATE(DATE_FORMAT(DATE_SUB(DATE_FORMAT(DATE_SUB(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 MONTH), '%Y-%m-01'), INTERVAL 1 DAY), '%Y%m%d'), '%Y%m%d'),\n           STR_TO_DATE(COALESCE(t2.final_netdt, b.netdt), '%Y%m%d')) AS aging_last2\n  FROM base b\n  LEFT JOIN traced_cur tc ON tc.kunnr = b.kunnr AND tc.belnr = b.belnr AND tc.docln = b.docln\n  LEFT JOIN traced_last tl ON tl.kunnr = b.kunnr AND tl.belnr = b.belnr AND tl.docln = b.docln\n  LEFT JOIN traced_last2 t2 ON t2.kunnr = b.kunnr AND t2.belnr = b.belnr AND t2.docln = b.docln\n)\nSELECT kunnr, name1, ksl,\n       CASE WHEN open_cur = 1 THEN ksl ELSE 0 END AS amt_cur,\n       CASE WHEN open_last = 1 THEN ksl ELSE 0 END AS amt_last,\n       CASE WHEN open_last2 = 1 THEN ksl ELSE 0 END AS amt_last2,\n       CASE WHEN open_cur = 1 THEN aging_cur END AS aging_cur,\n       CASE WHEN open_last = 1 THEN aging_last END AS aging_last,\n       CASE WHEN open_last2 = 1 THEN aging_last2 END AS aging_last2\nFROM final"
+  dimensions:
+  - name: customer_code
+    title: 客户编号
+    sql: kunnr
+    type: string
+    description: '[PRD C01] SAP 客户编号 KUNNR'
+  - name: customer_name
+    title: 客户名称
+    sql: name1
+    type: string
+    description: '[PRD C01] 客户名称（KNA1.NAME1）；kunnr 与 name1 一一对应，按编号+名称一起分组'
+  - name: aging_bucket
+    title: 账龄区间（当月）
+    sql: "CASE\n  WHEN aging_cur IS NULL THEN '不适用'\n  WHEN aging_cur <= 30 THEN '0-30天'\n  WHEN aging_cur <= 60 THEN '31-60天'\n  WHEN aging_cur <= 90 THEN '61-90天'\n  WHEN aging_cur <= 180 THEN '91-180天'\n  WHEN aging_cur <= 360 THEN '181-360天'\n  WHEN aging_cur <= 720 THEN '361-720天'\n  ELSE '721天以上'\nEND"
+    type: string
+    description: '[PRD A02] 7 档固定区间（未到期并入 0-30 天，PRD 口径）：0-30天 / 31-60天 / 61-90天 / 91-180天 / 181-360天 / 361-720天 / 721天以上。 只对当月未清行有值；历史月份的分桶在 measures 里（ar_b_*），不是维度。'
+  measures:
+  - name: ar_balance
+    title: 应收总余额（当月）
+    sql: amt_cur / 10000
+    type: sum
+    description: '[PRD K01] 集团外部客户当前未清应收总额（万元），对账日=系统当天 ｜ 单位：万元'
+    meta:
+      atomic: ar_balance
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      id: K01
+      layer: DWD
+      metric_id: AR.AR_BALANCE
+      owner: 应收财务组
+      prd: K01
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 应收账款
+      - 应收款
+      - AR余额
+      - 客户欠款
+      - 应收总额
+      - 应收余额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_balance_last
+    title: 应收总余额（上月末）
+    sql: amt_last / 10000
+    type: sum
+    description: 上月末对账日重放的未清应收总额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_balance
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_BALANCE_LAST
+      owner: 应收财务组
+      prd: K01
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 上月应收余额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_balance_last2
+    title: 应收总余额（前月末）
+    sql: amt_last2 / 10000
+    type: sum
+    description: 前月末对账日重放的未清应收总额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_balance
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_BALANCE_LAST2
+      owner: 应收财务组
+      prd: K01
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 前月应收余额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_long_balance
+    title: 长账龄金额（当月）
+    sql: CASE WHEN aging_cur > 180 THEN amt_cur ELSE 0 END / 10000
+    type: sum
+    description: '[PRD K02] 账龄超过 180 天的未清应收金额（万元），AB 凭证已追溯原始 netdt ｜ 单位：万元'
+    meta:
+      atomic: ar_long_balance
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      id: K02
+      layer: DWD
+      metric_id: AR.AR_LONG_BALANCE
+      owner: 应收财务组
+      prd: K02
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 长账龄
+      - 超期应收
+      - 长期欠款
+      - 逾期180天
+      - 长账龄应收
+      - 超180天
+      usage: 报表口径
+      version: v1.0
+  - name: ar_long_balance_last
+    title: 长账龄金额（上月末）
+    sql: CASE WHEN aging_last > 180 THEN amt_last ELSE 0 END / 10000
+    type: sum
+    description: 上月末对账日的长账龄金额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_long_balance
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_LONG_BALANCE_LAST
+      owner: 应收财务组
+      prd: K02
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 上月长账龄
+      usage: 报表口径
+      version: v1.0
+  - name: ar_long_balance_last2
+    title: 长账龄金额（前月末）
+    sql: CASE WHEN aging_last2 > 180 THEN amt_last2 ELSE 0 END / 10000
+    type: sum
+    description: 前月末对账日的长账龄金额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_long_balance
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_LONG_BALANCE_LAST2
+      owner: 应收财务组
+      prd: K02
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 前月长账龄
+      usage: 报表口径
+      version: v1.0
+  - name: ar_b_0_30
+    title: 0-30天区间金额（含未到期）
+    sql: CASE WHEN aging_cur <= 30 THEN amt_cur ELSE 0 END / 10000
+    type: sum
+    description: '[PRD A03] 账龄 0-30 天（含未到期）的未清金额（万元） ｜ 单位：万元'
+    meta:
+      atomic: ar_b_0_30
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      id: A03
+      layer: DWD
+      metric_id: AR.AR_B_0_30
+      owner: 应收财务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 0-30天金额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_b_31_60
+    title: 31-60天区间金额
+    sql: CASE WHEN aging_cur > 30 AND aging_cur <= 60 THEN amt_cur ELSE 0 END / 10000
+    type: sum
+    description: 账龄 31-60 天的未清金额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_b_31_60
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_B_31_60
+      owner: 应收财务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 31-60天金额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_b_61_90
+    title: 61-90天区间金额
+    sql: CASE WHEN aging_cur > 60 AND aging_cur <= 90 THEN amt_cur ELSE 0 END / 10000
+    type: sum
+    description: 账龄 61-90 天的未清金额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_b_61_90
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_B_61_90
+      owner: 应收财务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 61-90天金额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_b_91_180
+    title: 91-180天区间金额
+    sql: CASE WHEN aging_cur > 90 AND aging_cur <= 180 THEN amt_cur ELSE 0 END / 10000
+    type: sum
+    description: 账龄 91-180 天的未清金额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_b_91_180
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_B_91_180
+      owner: 应收财务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 91-180天金额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_b_181_360
+    title: 181-360天区间金额
+    sql: CASE WHEN aging_cur > 180 AND aging_cur <= 360 THEN amt_cur ELSE 0 END / 10000
+    type: sum
+    description: 账龄 181-360 天的未清金额（万元）。注意：可能为负数（贷方红冲凭证） ｜ 单位：万元
+    meta:
+      atomic: ar_b_181_360
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_B_181_360
+      owner: 应收财务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 181-360天金额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_b_361_720
+    title: 361-720天区间金额
+    sql: CASE WHEN aging_cur > 360 AND aging_cur <= 720 THEN amt_cur ELSE 0 END / 10000
+    type: sum
+    description: 账龄 361-720 天的未清金额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_b_361_720
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_B_361_720
+      owner: 应收财务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 361-720天金额
+      usage: 报表口径
+      version: v1.0
+  - name: ar_b_721
+    title: 721天以上区间金额
+    sql: CASE WHEN aging_cur > 720 THEN amt_cur ELSE 0 END / 10000
+    type: sum
+    description: 账龄超过 720 天的未清金额（万元） ｜ 单位：万元
+    meta:
+      atomic: ar_b_721
+      grain: 凭证行项目（客户 × 凭证 × 行）
+      layer: DWD
+      metric_id: AR.AR_B_721
+      owner: 应收财务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_finance_open_items_tmp_30ma
+      synonyms:
+      - 721天以上金额
+      - 721+金额
+      usage: 报表口径
+      version: v1.0
+views:
+- name: ds_ar_open_items__ar_open_items
+  title: ar_open_items 数据集 · ar_open_items
+  description: 集团外部客户当前未清应收总额（万元），对账日=系统当天…
+  cubes:
+  - join_path: ar_open_items
+    includes:
+    - ar_b_0_30
+    - ar_b_181_360
+    - ar_b_31_60
+    - ar_b_361_720
+    - ar_b_61_90
+    - ar_b_721
+    - ar_b_91_180
+    - ar_balance
+    - ar_balance_last
+    - ar_balance_last2
+    - ar_long_balance
+    - ar_long_balance_last
+    - ar_long_balance_last2
+  meta:
+    dataset: ar_open_items 数据集
+    dataset_id: ds_ar_open_items
+    cube: ar_open_items
+    members: 13
+    consumers: Data Agent
+    governance: ar_metrics.yaml

@@ -1,0 +1,299 @@
+# 本文件由 build_cube_model.py 从 fund_semantic.yaml 自动生成
+# 不要手改 —— 改 fund_semantic.yaml 然后重跑生成脚本
+
+cubes:
+- name: fund_bank_balance
+  title: 银行资金余额（银行 × 币种 × 日）
+  description: 银行资金余额（银行 × 币种 × 日）（粒度：开户银行 × 币种 × 数据日期）
+  sql: 'SELECT data_date, bank_name, currency_code, balance, balance_cny, rate, rate_date
+
+    FROM dwh_ads.ads_fund_bank_balance_daily_1da
+
+    WHERE data_date = (SELECT MAX(data_date) FROM dwh_ads.ads_fund_bank_balance_daily_1da)'
+  dimensions:
+  - name: data_date
+    title: 数据日期（快照日）
+    sql: data_date
+    type: time
+    description: '[PRD T01] 每日快照日期；默认查最新一天（T+1）'
+  - name: bank_name
+    title: 开户银行（总行）
+    sql: bank_name
+    type: string
+    description: '[PRD T02] 取总行口径（如 中国工商银行）；没有公司/法人维度 —— 公司类问法不支持'
+  - name: currency_code
+    title: 币种
+    sql: currency_code
+    type: string
+    description: '[PRD T03] CNY / USD / AUD / HKD。查 balance（原币）时必须带本维度'
+  measures:
+  - name: balance_cny
+    title: 资金余额（折算本币）
+    sql: balance_cny
+    type: sum
+    description: '[PRD K1] 银行账户账面余额按 T+1 汇率折算人民币后的合计（元），含外币账户；跨币种总和只能用本指标 ｜ 单位：元（展示换算万元/亿元）'
+    meta:
+      atomic: balance_cny
+      grain: 开户银行 × 币种 × 数据日期
+      id: K1
+      layer: ADS
+      metric_id: FUND.BALANCE_CNY
+      owner: 资金组
+      prd: K1
+      source_table: dwh_ads.ads_fund_bank_balance_daily_1da
+      synonyms:
+      - 资金余额
+      - 账上余额
+      - 银行余额
+      - 账上有多少钱
+      - 可用资金
+      - 账户余额
+      - 资金存量
+      - 资金
+      - 钱
+      usage: 报表口径
+      version: v1.0
+  - name: balance_cny_cny_only
+    title: 资金余额（仅人民币账户）
+    sql: CASE WHEN currency_code = 'CNY' THEN balance_cny ELSE 0 END
+    type: sum
+    description: 仅 CNY 本币账户的账面余额合计（元） ｜ 单位：元（展示换算万元/亿元）
+    meta:
+      atomic: balance_cny_cny_only
+      grain: 开户银行 × 币种 × 数据日期
+      layer: ADS
+      metric_id: FUND.BALANCE_CNY_CNY_ONLY
+      owner: 资金组
+      prd: 指标体系 v1.0
+      source_table: dwh_ads.ads_fund_bank_balance_daily_1da
+      synonyms:
+      - 人民币账户余额
+      usage: 报表口径
+      version: v1.0
+  - name: balance
+    title: 原币余额
+    sql: balance
+    type: sum
+    description: 按币种的原币账面余额（元）。⛔ 必须带 currency_code 维度，跨币种求和非法 ｜ 单位：元（原币）
+    meta:
+      atomic: balance
+      grain: 开户银行 × 币种 × 数据日期
+      layer: ADS
+      metric_id: FUND.BALANCE
+      owner: 资金组
+      prd: 指标体系 v1.0
+      source_table: dwh_ads.ads_fund_bank_balance_daily_1da
+      synonyms:
+      - 原币余额
+      - 外币余额
+      - 美元余额
+      - 欧元余额
+      usage: 报表口径
+      version: v1.0
+- name: fund_financing
+  title: 融资余额汇总（按融资方式）
+  description: 融资余额汇总（按融资方式）（粒度：融资方式 × 数据日期）
+  sql: 'SELECT data_date, loan_type, fin_short, fin_long, fin_balance, fin_balance_yoy
+
+    FROM dwh_ads.ads_fund_financing_summary_1da
+
+    WHERE data_date = (SELECT MAX(data_date) FROM dwh_ads.ads_fund_financing_summary_1da)'
+  dimensions:
+  - name: data_date
+    title: 数据日期（快照日）
+    sql: data_date
+    type: time
+    description: '[PRD T01] 数据日期（快照日）'
+  - name: loan_type
+    title: 融资方式
+    sql: loan_type
+    type: string
+    description: 流动资金贷款 / 信用证 / 银行承兑汇票(付款)
+  measures:
+  - name: fin_balance
+    title: 融资余额（剩余待还本金）
+    sql: fin_balance
+    type: sum
+    description: '[PRD K2] 存量融资的剩余待还本金合计（元），只含本金不含利息；DWS 已按 K2 口径过滤融资方式 ｜ 单位：元（展示换算万元/亿元）'
+    meta:
+      atomic: fin_balance
+      grain: 融资方式 × 数据日期
+      id: K2
+      layer: ADS
+      metric_id: FUND.FIN_BALANCE
+      owner: 资金组
+      prd: K2
+      source_table: dwh_ads.ads_fund_financing_summary_1da
+      synonyms:
+      - 融资余额
+      - 借款余额
+      - 贷款余额
+      - 还剩多少贷款
+      - 待还本金
+      - 未还本金
+      - 融资规模
+      - 融资
+      - 借款
+      - 贷款
+      usage: 报表口径
+      version: v1.0
+  - name: fin_short
+    title: 短期融资余额
+    sql: fin_short
+    type: sum
+    description: 期限 1 年及以内的融资剩余本金（元） ｜ 单位：元（展示换算万元/亿元）
+    meta:
+      atomic: fin_short
+      grain: 融资方式 × 数据日期
+      layer: ADS
+      metric_id: FUND.FIN_SHORT
+      owner: 资金组
+      prd: 指标体系 v1.0
+      source_table: dwh_ads.ads_fund_financing_summary_1da
+      synonyms:
+      - 短期融资
+      usage: 报表口径
+      version: v1.0
+  - name: fin_long
+    title: 中长期融资余额
+    sql: fin_long
+    type: sum
+    description: 期限 1 年以上的融资剩余本金（元） ｜ 单位：元（展示换算万元/亿元）
+    meta:
+      atomic: fin_long
+      grain: 融资方式 × 数据日期
+      layer: ADS
+      metric_id: FUND.FIN_LONG
+      owner: 资金组
+      prd: 指标体系 v1.0
+      source_table: dwh_ads.ads_fund_financing_summary_1da
+      synonyms:
+      - 中长期融资
+      - 长期融资
+      usage: 报表口径
+      version: v1.0
+  - name: fin_balance_yoy
+    title: 融资余额较年初变动
+    sql: fin_balance_yoy
+    type: sum
+    description: 当日融资余额 − 年初首日融资余额（元，ADS 预计算） ｜ 单位：元（展示换算万元/亿元）
+    meta:
+      atomic: fin_balance_yoy
+      grain: 融资方式 × 数据日期
+      layer: ADS
+      metric_id: FUND.FIN_BALANCE_YOY
+      owner: 资金组
+      prd: 指标体系 v1.0
+      source_table: dwh_ads.ads_fund_financing_summary_1da
+      synonyms:
+      - 较年初
+      - 较年初变动
+      usage: 报表口径
+      version: v1.0
+- name: fund_financing_maturity
+  title: 融资到期明细（合同级）
+  description: 融资到期明细（合同级）（粒度：融资合同 × 数据日期）
+  # 【口径修正 2026-11-08】源表按 data_date 存快照（74 个日期，每日一份全量）。
+  # 不加日期过滤直接 SUM 会把 74 天累加。本 cube 口径定义为「当前快照」。
+  # 注意：注释只能写在这里（YAML 层），不能写进下面的 SQL 字符串——
+  # YAML 会把换行折叠成空格，SQL 里的 `--` 会把后续条件整段注释掉。
+  sql: 'SELECT data_date, maturity_date, loan_term_type, contract_no, contract_text_no, principal_balance
+
+    FROM dwh_ads.ads_fund_financing_maturity_detail_1da
+
+    WHERE principal_balance <> 0 AND maturity_date IS NOT NULL
+
+      AND data_date = (SELECT MAX(data_date) FROM dwh_ads.ads_fund_financing_maturity_detail_1da)'
+  dimensions:
+  - name: data_date
+    title: 数据日期（快照日）
+    sql: data_date
+    type: time
+    description: '[PRD T01] 数据日期（快照日）'
+  - name: maturity_date
+    title: 到期日
+    sql: maturity_date
+    type: time
+    description: 融资到期日 —— 到期分布/未来 N 个月到期本金按本维度查询（允许未来区间）
+  - name: loan_term_type
+    title: 期限归类
+    sql: loan_term_type
+    type: string
+    description: short_term（短期）/ long_term（中长期）
+  - name: contract_no
+    title: 融资登记编号
+    sql: contract_no
+    type: string
+    description: 融资登记编号
+  - name: contract_text_no
+    title: 融资合同号
+    sql: contract_text_no
+    type: string
+    description: 融资合同号
+  measures:
+  - name: principal_balance
+    title: 到期本金
+    sql: principal_balance
+    type: sum
+    description: 合同级剩余待还本金（元），供到期分布/未来到期区间查询 ｜ 单位：元（展示换算万元/亿元）
+    meta:
+      atomic: principal_balance
+      grain: 融资合同 × 数据日期
+      layer: ADS
+      metric_id: FUND.PRINCIPAL_BALANCE
+      owner: 资金组
+      prd: 指标体系 v1.0
+      source_table: dwh_ads.ads_fund_financing_maturity_detail_1da
+      synonyms:
+      - 到期本金
+      - 到期融资余额
+      usage: 报表口径
+      version: v1.0
+views:
+- name: ds_fund_bank_balance__fund_bank_balance
+  title: fund_bank_balance 数据集 · fund_bank_balance
+  description: 银行账户账面余额按 T+1 汇率折算人民币后的合计（元），含外币账户；跨币种总和只能用本指标…
+  cubes:
+  - join_path: fund_bank_balance
+    includes:
+    - balance
+    - balance_cny
+    - balance_cny_cny_only
+  meta:
+    dataset: fund_bank_balance 数据集
+    dataset_id: ds_fund_bank_balance
+    cube: fund_bank_balance
+    members: 3
+    consumers: Data Agent
+    governance: fund_metrics.yaml
+- name: ds_fund_financing__fund_financing
+  title: fund_financing 数据集 · fund_financing
+  description: 存量融资的剩余待还本金合计（元），只含本金不含利息；DWS 已按 K2 口径过滤融资方式…
+  cubes:
+  - join_path: fund_financing
+    includes:
+    - fin_balance
+    - fin_balance_yoy
+    - fin_long
+    - fin_short
+  meta:
+    dataset: fund_financing 数据集
+    dataset_id: ds_fund_financing
+    cube: fund_financing
+    members: 4
+    consumers: Data Agent
+    governance: fund_metrics.yaml
+- name: ds_fund_financing_maturity__fund_financing_maturity
+  title: fund_financing_maturity 数据集 · fund_financing_maturity
+  description: 合同级剩余待还本金（元），供到期分布/未来到期区间查询…
+  cubes:
+  - join_path: fund_financing_maturity
+    includes:
+    - principal_balance
+  meta:
+    dataset: fund_financing_maturity 数据集
+    dataset_id: ds_fund_financing_maturity
+    cube: fund_financing_maturity
+    members: 1
+    consumers: Data Agent
+    governance: fund_metrics.yaml

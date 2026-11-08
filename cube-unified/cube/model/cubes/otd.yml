@@ -1,0 +1,468 @@
+# 本文件由 build_cube_model.py 从 otd_semantic.yaml 自动生成
+# 不要手改 —— 改 otd_semantic.yaml 然后重跑生成脚本
+
+cubes:
+- name: otd_plan
+  title: OTD计划排产（月）
+  description: OTD计划排产（月）（粒度：基地 × 生产月份（月粒度，计划口径））
+  sql: SELECT * FROM dwh_ads.ads_otd_dashboard_plan
+  dimensions:
+  - name: base_name
+    title: 基地
+    sql: CASE WHEN factory_code = '1000' THEN '合肥基地' ELSE '临沂基地' END
+    type: string
+    description: 合肥基地(工厂1000) / 临沂基地(工厂1006+1008合计)；不指定时默认全部基地
+  - name: factory_code
+    title: 工厂编码
+    sql: factory_code
+    type: string
+    description: 1000=合肥 1006/1008=临沂
+  - name: factory_name
+    title: 工厂名称
+    sql: factory_name
+    type: string
+    description: 合肥基地 / 临沂基地
+  - name: stat_month
+    title: 生产月份
+    sql: stat_month
+    type: string
+    description: 格式 YYYYMM，计划口径月粒度
+  - name: stat_month_date
+    title: 生产月份(日期型)
+    sql: STR_TO_DATE(CONCAT(stat_month, '01'), '%Y%m%d')
+    type: time
+    description: 月粒度时间维度（趋势/区间）
+  measures:
+  - name: plan_qty
+    title: 计划排产量
+    sql: plan_qty
+    type: sum
+    description: 【计划口径·月粒度】当月计划生产整车数量（台），合肥/临沂分基地，取最大已提交版本 ｜ 单位：台
+    meta:
+      atomic: plan_qty
+      grain: 基地×月
+      layer: ADS
+      metric_id: OTD.K01.MONTH
+      owner: OTD业务组
+      prd: K01/K02（合肥 / 临沂）
+      source_table: dwh_ads.ads_otd_dashboard_plan
+      synonyms:
+      - 排产量
+      - 计划排产
+      - 排产计划
+      - 本月排产
+      usage: 汇总口径
+      version: v1.0
+- name: otd_daily
+  title: OTD上线入库（日）
+  description: OTD上线入库（日）（粒度：基地 × 统计日期（日粒度，事件口径））
+  sql: SELECT * FROM dwh_ads.ads_otd_dashboard_online_inbound
+  dimensions:
+  - name: base_name
+    title: 基地
+    sql: CASE WHEN factory_code = '1000' THEN '合肥基地' ELSE '临沂基地' END
+    type: string
+    description: 合肥基地 / 临沂基地
+  - name: factory_code
+    title: 工厂编码
+    sql: factory_code
+    type: string
+    description: 1000=合肥 1006/1008=临沂
+  - name: factory_name
+    title: 工厂名称
+    sql: factory_name
+    type: string
+    description: 合肥基地 / 临沂基地
+  - name: stat_date
+    title: 统计日期
+    sql: stat_date
+    type: time
+    description: 事件日粒度（上线/入库按天）
+  measures:
+  - name: online_qty
+    title: 上线量
+    sql: online_qty
+    type: sum
+    description: 【事件口径·日粒度】当期进入生产线的整车数量（台），一行一台车 ｜ 单位：台
+    meta:
+      atomic: online_qty
+      grain: 基地×日
+      layer: ADS
+      metric_id: OTD.K03.EVENT
+      owner: OTD业务组
+      prd: K03/K04
+      source_table: dwh_ads.ads_otd_dashboard_online_inbound
+      synonyms:
+      - 上线量
+      - 实际上线
+      - 上线多少台
+      - 生产上线
+      usage: 事件汇总口径
+      version: v1.0
+  - name: inbound_qty
+    title: 入库量
+    sql: inbound_qty
+    type: sum
+    description: 【事件口径·日粒度】当期完工入库整车数量（台），入库类型=整车采购入库（WMS） ｜ 单位：台
+    meta:
+      atomic: inbound_qty
+      grain: 基地×日
+      layer: ADS
+      metric_id: OTD.K05.EVENT
+      owner: OTD业务组
+      prd: K05/K06
+      source_table: dwh_ads.ads_otd_dashboard_online_inbound
+      synonyms:
+      - 入库量
+      - 入库多少台
+      - 整车入库
+      usage: 事件汇总口径
+      version: v1.0
+- name: otd_distribution_plan
+  title: OTD排产分布（月）
+  description: OTD排产分布（月）（粒度：分布类型 × 维度值 × 基地 × 生产月份（计划口径））
+  sql: SELECT * FROM dwh_ads.ads_otd_dimension_distribution
+  dimensions:
+  - name: distribution_type
+    title: 分布类型
+    sql: distribution_type
+    type: string
+    description: vehicle_model=车型 battery_supplier=电池供应商 edrive_supplier=电驱桥供应商
+  - name: dimension_value
+    title: 分布维度值
+    sql: dimension_value
+    type: string
+    description: 车型名称或供应商名称
+  - name: factory_code
+    title: 工厂编码
+    sql: factory_code
+    type: string
+    description: 1000=合肥 1006/1008=临沂
+  - name: base_name
+    title: 基地
+    sql: CASE WHEN factory_code = '1000' THEN '合肥基地' ELSE '临沂基地' END
+    type: string
+    description: 合肥基地 / 临沂基地
+  - name: stat_month
+    title: 生产月份
+    sql: stat_month
+    type: string
+    description: 格式 YYYYMM
+  - name: stat_month_date
+    title: 生产月份(日期型)
+    sql: STR_TO_DATE(CONCAT(stat_month, '01'), '%Y%m%d')
+    type: time
+    description: 月粒度时间维度
+  measures:
+  - name: plan_qty
+    title: 排产量分布
+    sql: plan_qty
+    type: sum
+    description: 【计划口径·月粒度】按车型/电池供应商/电驱桥供应商分类的当月排产量（台） ｜ 单位：台
+    meta:
+      atomic: plan_qty
+      grain: 基地×月×车型/供应商
+      layer: ADS
+      metric_id: OTD.K01.DIST
+      owner: OTD业务组
+      prd: K01/K02（合肥 / 临沂）
+      source_table: dwh_ads.ads_otd_dimension_distribution
+      synonyms:
+      - 排产量分布
+      - 车型分布
+      - 供应商分布
+      usage: 分布口径
+      version: v1.0
+- name: otd_distribution_daily
+  title: OTD分布事实（日）
+  description: OTD分布事实（日）（粒度：车型 × 基地 × 统计日期（事件口径，当前仅车型分布））
+  sql: SELECT * FROM dwh_ads.ads_otd_dimension_distribution_fact_1da
+  dimensions:
+  - name: dimension_value
+    title: 分布维度值
+    sql: dimension_value
+    type: string
+    description: 车型名称
+  - name: distribution_type
+    title: 分布类型
+    sql: distribution_type
+    type: string
+    description: 当前仅 vehicle_model
+  - name: factory_code
+    title: 工厂编码
+    sql: factory_code
+    type: string
+    description: 1000=合肥 1006/1008=临沂
+  - name: base_name
+    title: 基地
+    sql: CASE WHEN factory_code = '1000' THEN '合肥基地' ELSE '临沂基地' END
+    type: string
+    description: 合肥基地 / 临沂基地
+  - name: stat_date
+    title: 统计日期
+    sql: stat_date
+    type: time
+    description: 事件日粒度
+  measures:
+  - name: online_qty
+    title: 车型上线量
+    sql: online_qty
+    type: sum
+    description: 【事件口径·日粒度】按车型分类的当期上线量（台） ｜ 单位：台
+    meta:
+      atomic: online_qty
+      grain: 基地×日×车型
+      layer: ADS
+      metric_id: OTD.K08.EVENT.online_qty
+      owner: OTD业务组
+      prd: K03/K04
+      source_table: dwh_ads.ads_otd_dimension_distribution_fact_1da
+      synonyms:
+      - 车型上线
+      usage: 分布口径
+      version: v1.0
+  - name: inbound_qty
+    title: 车型入库量
+    sql: inbound_qty
+    type: sum
+    description: 【事件口径·日粒度】按车型分类的当期入库量（台） ｜ 单位：台
+    meta:
+      atomic: inbound_qty
+      grain: 基地×日×车型
+      layer: ADS
+      metric_id: OTD.K08.EVENT
+      owner: OTD业务组
+      prd: K05/K06
+      source_table: dwh_ads.ads_otd_dimension_distribution_fact_1da
+      synonyms:
+      - 车型入库
+      usage: 分布口径
+      version: v1.0
+- name: otd_schedule_detail
+  title: OTD排产明细
+  description: OTD排产明细（粒度：物料 × 基地 × 生产月份（查询锁当月，otd 守卫强制））
+  sql: SELECT * FROM dwh_ads.ads_otd_production_schedule_detail
+  dimensions:
+  - name: factory_code
+    title: 工厂编码
+    sql: factory_code
+    type: string
+    description: 1000=合肥 1006/1008=临沂
+  - name: factory_name
+    title: 工厂名称
+    sql: factory_name
+    type: string
+    description: 合肥基地 / 临沂基地
+  - name: base_name
+    title: 基地
+    sql: CASE WHEN factory_code = '1000' THEN '合肥基地' ELSE '临沂基地' END
+    type: string
+    description: 合肥基地 / 临沂基地
+  - name: vehicle_model
+    title: 车型
+    sql: vehicle_model
+    type: string
+    description: 星辰404/星途405 等（⚠️ 拼接口径业务复核中，见 traps）
+  - name: battery_supplier
+    title: 电池供应商
+    sql: battery_supplier
+    type: string
+    description: 特征值 ZCF 映射
+  - name: edrive_supplier
+    title: 电驱桥供应商
+    sql: edrive_supplier
+    type: string
+    description: 特征值 ZCJ 映射
+  - name: production_month
+    title: 生产月份
+    sql: production_month
+    type: string
+    description: 格式 YYYYMM；⚠️ 排产明细锁当月（B05）
+  measures:
+  - name: plan_qty
+    title: 计划排产量
+    sql: plan_qty
+    type: sum
+    description: 【计划口径·月粒度】该维度组合的当月计划排产量（台） ｜ 单位：台
+    meta:
+      atomic: plan_qty
+      grain: 基地×月×车型×供应商（锁当月）
+      layer: ADS
+      metric_id: OTD.K12.DETAIL.plan_qty
+      owner: OTD业务组
+      prd: K01/K02（合肥 / 临沂）
+      source_table: dwh_ads.ads_otd_production_schedule_detail
+      synonyms:
+      - 排产量
+      usage: 明细口径
+      version: v1.0
+  - name: change_qty
+    title: 变更量
+    sql: change_qty
+    type: sum
+    description: 排产计划版本变更幅度（台），最大版本−最小版本，负值=计划减少 ｜ 单位：台
+    meta:
+      atomic: change_qty
+      grain: 基地×月×车型×供应商（锁当月）
+      layer: ADS
+      metric_id: OTD.K13.DETAIL
+      owner: OTD业务组
+      prd: K13
+      source_table: dwh_ads.ads_otd_production_schedule_detail
+      synonyms:
+      - 排产变更量
+      - 计划调整量
+      usage: 明细口径
+      version: v1.0
+  - name: online_qty
+    title: 实际上线量
+    sql: online_qty
+    type: sum
+    description: 【事件口径·月粒度固化】该维度组合的当月实际上线量（台） ｜ 单位：台
+    meta:
+      atomic: online_qty
+      grain: 基地×月×车型×供应商（锁当月）
+      layer: ADS
+      metric_id: OTD.K12.DETAIL.online_qty
+      owner: OTD业务组
+      prd: K03/K04
+      source_table: dwh_ads.ads_otd_production_schedule_detail
+      synonyms:
+      - 实际上线量
+      usage: 明细口径
+      version: v1.0
+  - name: inbound_qty
+    title: 入库量
+    sql: inbound_qty
+    type: sum
+    description: 【事件口径·月粒度固化】该维度组合的当月入库量（台） ｜ 单位：台
+    meta:
+      atomic: inbound_qty
+      grain: 基地×月×车型×供应商（锁当月）
+      layer: ADS
+      metric_id: OTD.K12.DETAIL
+      owner: OTD业务组
+      prd: K05/K06
+      source_table: dwh_ads.ads_otd_production_schedule_detail
+      synonyms:
+      - 入库量
+      usage: 明细口径
+      version: v1.0
+  - name: opening_inventory
+    title: 期初库存
+    sql: opening_inventory
+    type: sum
+    description: 当月1号整车库存快照（台） ｜ 单位：台
+    meta:
+      atomic: opening_inventory
+      grain: 基地×月×车型×供应商（锁当月）
+      layer: ADS
+      metric_id: OTD.K11.DETAIL.opening_inventory
+      owner: OTD业务组
+      prd: K11
+      source_table: dwh_ads.ads_otd_production_schedule_detail
+      synonyms:
+      - 期初库存
+      usage: 明细口径
+      version: v1.0
+  - name: return_qty
+    title: 退车量
+    sql: return_qty
+    type: sum
+    description: 当月退车量（台），一车一台，排除当天 ｜ 单位：台
+    meta:
+      atomic: return_qty
+      grain: 基地×月×车型×供应商（锁当月）
+      layer: ADS
+      metric_id: OTD.K11.DETAIL.return_qty
+      owner: OTD业务组
+      prd: K11
+      source_table: dwh_ads.ads_otd_production_schedule_detail
+      synonyms:
+      - 退车量
+      usage: 明细口径
+      version: v1.0
+  - name: sales_plan_qty
+    title: 计划销售量
+    sql: sales_plan_qty
+    type: sum
+    description: 当月计划销售量（台），CRM 订单 type=0 且未取消、按创建时间年月、排除当天 ｜ 单位：台
+    meta:
+      atomic: sales_plan_qty
+      grain: 基地×月×车型×供应商（锁当月）
+      layer: ADS
+      metric_id: OTD.K11.DETAIL.sales_plan_qty
+      owner: OTD业务组
+      prd: K11
+      source_table: dwh_ads.ads_otd_production_schedule_detail
+      synonyms:
+      - 计划销售量
+      - 计划销售
+      usage: 明细口径
+      version: v1.0
+views:
+- name: ds_production_delivery__otd_plan
+  title: 生产交付数据集 · otd_plan
+  description: 排产量（计划·月粒度）、上线量/入库量（事件·日粒度）；基地×月
+  cubes:
+  - join_path: otd_plan
+    includes: '*'
+  meta:
+    dataset: 生产交付数据集
+    dataset_id: ds_production_delivery
+    cube: otd_plan
+    members: all
+    consumers: 经营日报、Data Agent
+    governance: otd_metrics.yaml
+- name: ds_production_delivery__otd_daily
+  title: 生产交付数据集 · otd_daily
+  description: 排产量（计划·月粒度）、上线量/入库量（事件·日粒度）；基地×月
+  cubes:
+  - join_path: otd_daily
+    includes: '*'
+  meta:
+    dataset: 生产交付数据集
+    dataset_id: ds_production_delivery
+    cube: otd_daily
+    members: all
+    consumers: 经营日报、Data Agent
+    governance: otd_metrics.yaml
+- name: ds_distribution__otd_distribution_plan
+  title: 分布数据集 · otd_distribution_plan
+  description: 车型 / 电池供应商 / 电驱桥供应商分布（计划月 + 事件日）
+  cubes:
+  - join_path: otd_distribution_plan
+    includes: '*'
+  meta:
+    dataset: 分布数据集
+    dataset_id: ds_distribution
+    cube: otd_distribution_plan
+    members: all
+    consumers: 看板分布模块、Data Agent
+    governance: otd_metrics.yaml
+- name: ds_distribution__otd_distribution_daily
+  title: 分布数据集 · otd_distribution_daily
+  description: 车型 / 电池供应商 / 电驱桥供应商分布（计划月 + 事件日）
+  cubes:
+  - join_path: otd_distribution_daily
+    includes: '*'
+  meta:
+    dataset: 分布数据集
+    dataset_id: ds_distribution
+    cube: otd_distribution_daily
+    members: all
+    consumers: 看板分布模块、Data Agent
+    governance: otd_metrics.yaml
+- name: ds_schedule_detail__otd_schedule_detail
+  title: 排产明细数据集 · otd_schedule_detail
+  description: 当月排产明细全字段（PRD B05/K12 锁定当月，历史月份不可查）
+  cubes:
+  - join_path: otd_schedule_detail
+    includes: '*'
+  meta:
+    dataset: 排产明细数据集
+    dataset_id: ds_schedule_detail
+    cube: otd_schedule_detail
+    members: all
+    consumers: 明细钻取与导出
+    governance: otd_metrics.yaml

@@ -1,0 +1,115 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/', redirect: '/workspace/business' },
+    { path: '/login', name: 'login', component: () => import('../views/auth/LoginView.vue'), meta: { title: '登录', public: true } },
+
+    // 工作台
+    { path: '/workspace/business', name: 'workspace-business', component: () => import('../views/dashboard/DashboardView.vue'), meta: { title: '业务总览' } },
+    { path: '/dashboard', name: 'dashboard', component: () => import('../views/dashboard/SystemDashboardView.vue'), meta: { title: '系统看版' } },
+
+    // 数据集成
+    { path: '/data/connections', name: 'data-connections', component: () => import('../views/datasource/ConnectionsPage.vue'), meta: { title: '数据接入' } },
+    { path: '/data/assets', name: 'data-assets', component: () => import('../views/datasource/AssetsPage.vue'), meta: { title: '资产目录' } },
+    { path: '/data/pipeline', name: 'data-pipeline', component: () => import('../views/datasource/pages/DataPipelinePage.vue'), meta: { title: '数据管道' } },
+    { path: '/data/lineage', name: 'data-lineage', component: () => import('../views/datasource/pages/DataLineagePage.vue'), meta: { title: '数据血缘' } },
+    { path: '/data/quality', name: 'data-quality', component: () => import('../views/datasource/pages/DataQualityPage.vue'), meta: { title: '数据质量' } },
+
+    // 指标中心（口径来自 Cube）
+    { path: '/metrics/ask', name: 'metrics-ask', component: () => import('../views/metrics/AskView.vue'), meta: { title: '问数' } },
+    { path: '/metrics/explore', name: 'metrics-explore', component: () => import('../views/metrics/MetricsExploreView.vue'), meta: { title: '指标探查' } },
+    { path: '/metrics/objects', name: 'metrics-objects', component: () => import('../views/metrics/ObjectMetricsView.vue'), meta: { title: '对象指标' } },
+  { path: '/metrics/semantics', name: 'metrics-semantics', component: () => import('../views/metrics/SemanticsView.vue'), meta: { title: '语义层' } },
+
+    // 本体中心 — 本体构建
+    { path: '/builder', name: 'ontology-builder', component: () => import('../views/builder/OntologyBuilderView.vue'), meta: { title: '手动构建' } },
+    { path: '/builder/template', name: 'ontology-builder-template', component: () => import('../views/builder/TemplateBuilderView.vue'), meta: { title: '模板构建' } },
+    { path: '/builder/doc', name: 'ontology-builder-doc', component: () => import('../views/builder/DocBuilderView.vue'), meta: { title: '文档构建' } },
+    { path: '/builder/ai', name: 'ontology-builder-ai', component: () => import('../views/builder/AiBuilderView.vue'), meta: { title: '资产构建' } },
+
+    // 本体中心 — 本体管理
+    {
+      path: '/browser',
+      component: () => import('../views/browser/OntologyBrowser.vue'),
+      meta: { title: '对象与关系管理' },
+      children: [
+        { path: '', name: 'browser-objects', component: () => import('../views/ontology/OntologyExplorer.vue'), meta: { title: '对象与关系管理' } },
+      ]
+    },
+    { path: '/data/mapping', name: 'data-mapping', component: () => import('../views/mapping/MappingView.vue'), meta: { title: '映射管理' } },
+    { path: '/logic/rules', name: 'logic-rules', component: () => import('../views/logic/LogicView.vue'), meta: { title: '规则管理' } },
+    { path: '/logic/functions', name: 'logic-functions', component: () => import('../views/logic/FunctionsView.vue'), meta: { title: '函数管理' } },
+    { path: '/logic/actions', name: 'logic-actions', component: () => import('../views/logic/ActionsView.vue'), meta: { title: '行动管理' } },
+
+    // 本体中心 — 图谱探索
+    { path: '/studio', name: 'studio', component: () => import('../views/studio/OntologyStudio.vue'), meta: { title: '图谱探索' } },
+
+    // 本体中心 — 本体发布
+    { path: '/ontology/publish', name: 'ontology-publish', component: () => import('../views/ontology/OntologyPublishView.vue'), meta: { title: '本体发布' } },
+    { path: '/ontology/version', redirect: '/ontology/publish' },
+    // 本体中心 — 自动发现（从表结构推对象类型）
+    { path: '/ontology/discovery', name: 'ontology-discovery', component: () => import('../views/ontology/OntologyDiscoveryView.vue'), meta: { title: '自动发现' } },
+
+    // 本体中心 — 本体服务
+    { path: '/service/api', name: 'service-api', component: () => import('../views/service/ApiServiceView.vue'), meta: { title: '本体服务' } },
+
+    // 本体中心 — 辅助路由
+    { path: '/ontology/create', name: 'ontology-create', component: () => import('../views/ontology/EntityCreateView.vue'), meta: { title: '新建本体对象' } },
+    { path: '/ontology/:id', name: 'ontology-detail', component: () => import('../views/detail/EntityDetail.vue'), meta: { title: '实体详情' } },
+    { path: '/browser/graph', name: 'browser-graph', component: () => import('../views/dataflow/DataflowView.vue'), meta: { title: '本体图谱' } },
+
+    // 智能体应用中心
+    { path: '/agent/manage', name: 'agent-manage', component: () => import('../views/service/AgentServiceView.vue'), meta: { title: '智能体管理' } },
+    { path: '/agent/manage/new', name: 'agent-new', component: () => import('../views/agents/AgentDetailView.vue'), meta: { title: '新建智能体' } },
+    { path: '/agent/manage/:id', name: 'agent-detail', component: () => import('../views/agents/AgentDetailView.vue'), meta: { title: '智能体详情' } },
+    { path: '/agent/toolbox', name: 'agent-toolbox', component: () => import('../views/agents/skills/SkillListView.vue'), meta: { title: '技能管理' } },
+    { path: '/agent/toolbox/create', name: 'skill-create', component: () => import('../views/agents/skills/SkillWizard.vue'), meta: { title: '创建技能' } },
+    { path: '/agent/toolbox/:id', name: 'skill-detail', component: () => import('../views/agents/skills/SkillDetailView.vue'), meta: { title: '技能详情' } },
+    { path: '/aip', name: 'aip-platform', component: () => import('../views/aip/AipPlatformView.vue'), meta: { title: '流程编排' } },
+
+    // 场景中心
+    { path: '/scene', name: 'scene-hub', component: () => import('../views/scene/SceneHub.vue'), meta: { title: '场景中心' } },
+    { path: '/scene/broadband', name: 'scene-broadband', component: () => import('../views/scene/BroadbandScene.vue'), meta: { title: '宽带退单稽核' } },
+    { path: '/scene/broadband/stats', name: 'scene-broadband-stats', component: () => import('../views/scene/BroadbandStats.vue'), meta: { title: '退单稽核统计' } },
+    { path: '/scene/broadband/inbox', name: 'scene-broadband-inbox', component: () => import('../views/scene/BroadbandInbox.vue'), meta: { title: '智能收件箱' } },
+    { path: '/scene/broadband/:id', name: 'scene-broadband-detail', component: () => import('../views/scene/BroadbandDetail.vue'), meta: { title: '退单详情' } },
+
+    // 运维与安全中心
+    { path: '/ops/monitor', name: 'ops-monitor', component: () => import('../views/settings/MonitorView.vue'), meta: { title: '运维监控' } },
+    { path: '/ops/log-audit', name: 'ops-log-audit', component: () => import('../views/ops/LogAuditView.vue'), meta: { title: '日志与审计' } },
+    { path: '/ops/permissions', name: 'ops-permissions', component: () => import('../views/governance/PermissionsView.vue'), meta: { title: '权限管理' } },
+    { path: '/ops/config', name: 'ops-config', component: () => import('../views/settings/SystemConfigView.vue'), meta: { title: '系统配置' } },
+    { path: '/settings/models', name: 'settings-models', component: () => import('../views/models/ModelManageView.vue'), meta: { title: '模型配置' } },
+
+    // 兼容旧路由
+    { path: '/datasource', redirect: '/data/connections' },
+    { path: '/data/workshop', redirect: '/data/connections' },
+    { path: '/data/ingest', redirect: '/data/connections' },
+    { path: '/data/catalog', redirect: '/data/assets' },
+    { path: '/data/hydration', redirect: '/ontology/publish' },
+    { path: '/service/agent', redirect: '/agent/manage' },
+    { path: '/service/workflow', redirect: '/aip' },
+    { path: '/harness', redirect: '/aip' },
+    { path: '/settings/monitor', redirect: '/ops/monitor' },
+    { path: '/settings/general', redirect: '/ops/config' },
+    { path: '/governance/permissions', redirect: '/ops/permissions' },
+    { path: '/governance/audit', redirect: '/ops/log-audit' },
+  ]
+})
+
+router.beforeEach((to) => {
+  if (to.meta.public) return true
+  const token = localStorage.getItem('token')
+  if (!token) return { name: 'login' }
+  return true
+})
+
+router.afterEach((to) => {
+  // 浏览器标签页标题：跟随路由名，回退到品牌名
+  const brand = 'Deep Way Ontology'
+  document.title = to.meta.title ? `${to.meta.title} — ${brand}` : brand
+})
+
+export default router

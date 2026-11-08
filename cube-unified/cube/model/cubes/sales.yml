@@ -1,0 +1,501 @@
+# 本文件由 build_cube_model.py 从 sales_semantic.yaml 自动生成
+# 不要手改 —— 改 sales_semantic.yaml 然后重跑生成脚本
+
+cubes:
+- name: contract_vehicle
+  title: 合同车辆明细
+  description: 合同车辆明细（粒度：合同 × 产品组合）
+  sql: 'SELECT * FROM dwh_dwd.dwd_crm_contract_vehicle_di
+
+    WHERE contract_deleted = 0 AND sign_state = 4'
+  dimensions:
+  - name: contract_date
+    title: 合同创建时间
+    sql: contract_create_time
+    type: time
+    description: '[PRD T01] 合同创建时间'
+  - name: province
+    title: 省份
+    sql: listed_province_name
+    type: string
+    description: '[PRD T03] 省份'
+  - name: industry
+    title: 行业
+    sql: industry
+    type: string
+    description: '[PRD T05] 行业是单一枚举字段，全集只有 10 个值（用 / 分隔）：其他 / 砂石料、水泥 / 煤炭 / 港口 / 矿产 / 钢厂 / 快递快运 / 电厂 / 干线物流 / 有色金属。 注意「砂石料、水泥」是【一个整体值】，不是两个值。 | 行业枚举里「砂石料、水泥」是【一个整体值】（顿号连接，全量 4,987 台、第二大行业）。 用户问"砂石料、水泥"时 filter 只能写一个值 ["砂石料、水泥"]； 绝不能把顿号当"或"拆成 ["砂石料","水泥"] 两个值 —— 拆开 IN 匹配不上，必然查空。 filter 的 values 必须与上面枚举【逐字一致】。'
+  - name: cab_type
+    title: 驾驶室类型
+    sql: vehicle_model_name
+    type: string
+    description: '[PRD T07] 星途 / 星辰。车型命名的第一段。 | ⚠️ 数仓里这列叫 vehicle_model_name，但存的是「驾驶室类型」不是车型。
+
+      用户说"星辰404/星途505"时，拆成 cab_type（星途/星辰）+ battery_capacity（404/505）
+
+      两个维度一起给，绝不单独用本列当车型。'
+  - name: battery_capacity
+    title: 电池容量
+    sql: battery_capacity
+    type: string
+    description: '[PRD T02] 电池容量'
+  - name: model_code
+    title: 车型代号
+    sql: model_code
+    type: string
+    description: '[PRD T02] 车型代号（如 E2510）。注意 K07 车型分布用的是 cab_type+battery_capacity，不是本列。'
+  - name: contract_code
+    title: 合同编号
+    sql: contract_code
+    type: string
+    description: 合同编号
+  - name: contract_title
+    title: 合同标题
+    sql: contract_title
+    type: string
+    description: 合同标题
+  - name: contract_model_qty
+    title: 合同台数(明细)
+    sql: model_qty
+    type: number
+    description: 产品组合台数原值（明细行展示用；与同名 measure 不同，这是不聚合的原值维度）
+  - name: contracting_entity
+    title: 签约主体
+    sql: contracting_entity
+    type: string
+    description: 签约主体
+  - name: contract_total_price
+    title: 合同总价(元)
+    sql: contract_total_price
+    type: number
+    description: 合同级总价，多产品组合合同在各组合行上重复显示（明细展示原值，勿求和）
+  - name: portfolio_contract_price
+    title: 单台价(元)
+    sql: portfolio_contract_price
+    type: number
+    description: 产品组合合同单价（元/台）
+  - name: rebate_amount
+    title: 返利(元)
+    sql: rebate_amount
+    type: number
+    description: 返利(元)
+  - name: linyi_freight_per_unit
+    title: 临沭工厂运费(元/台)
+    sql: linyi_factory_freight_per_unit
+    type: number
+    description: 临沭工厂运费(元/台)
+  - name: jianghuai_freight_per_unit
+    title: 江淮工厂运费(元/台)
+    sql: jianghuai_factory_freight_per_unit
+    type: number
+    description: 江淮工厂运费(元/台)
+  - name: linyi_net_price_per_unit
+    title: 临沭工厂净价(元/台)
+    sql: linyi_factory_net_price_per_unit
+    type: number
+    description: 临沭工厂净价(元/台)
+  - name: jianghuai_net_price_per_unit
+    title: 江淮工厂净价(元/台)
+    sql: jianghuai_factory_net_price_per_unit
+    type: number
+    description: 江淮工厂净价(元/台)
+  measures:
+  - name: contract_vehicle_count
+    title: 合同车辆数（国内）
+    sql: model_qty
+    type: sum
+    description: '[PRD K01] 已签署合同的车辆总台数，反映签约规模。K01 国内侧口径 ｜ 口径：签署状态=双方已签署 ｜ 单位：台 ｜ 粒度：集团/区域'
+    meta:
+      atomic: contract_qty
+      grain: 合同×车型
+      id: K01
+      layer: DWD
+      metric_id: SL.K01.CN
+      owner: 销售业务组
+      prd: K01（国内）/ K05（海外）
+      region: 国内
+      source_table: dwh_dwd.dwd_crm_contract_vehicle_di
+      synonyms:
+      - 签约数
+      - 合同数
+      - 合同台数
+      - 签约台数
+      - 签了多少台
+      - 签单量
+      - 签了多少辆车
+      - 合同车辆
+      - 签约
+      - 合同
+      - 签署
+      - 卖了多少台车
+      - 卖了多少台
+      - 卖了多少辆车
+      - 卖车
+      - 销量
+      - 卖出去多少
+      usage: 签约口径
+      version: v1.0
+  - name: contract_count
+    title: 合同份数
+    sql: contract_id
+    type: countDistinct
+    description: '[PRD K01b] 已签署合同的份数（不是台数） ｜ 口径：签署状态=双方已签署，按合同去重 ｜ 单位：份'
+    meta:
+      atomic: contract_cnt
+      grain: 合同
+      id: K01b
+      layer: DWD
+      metric_id: SL.K01.CNT
+      owner: 销售业务组
+      prd: K01（份数口径）
+      region: 国内
+      source_table: dwh_dwd.dwd_crm_contract_vehicle_di
+      synonyms:
+      - 多少份合同
+      - 合同份数
+      - 签了多少份
+      usage: 签约口径
+      version: v1.0
+- name: deposit
+  title: 已收定金（按合同粒度换算）
+  description: 已收定金（按合同粒度换算）（粒度：合同 × 统计日 × 省份）
+  sql: "WITH mp AS (\n  SELECT contract_id, MAX(deposit) AS max_dep, SUM(model_qty) AS qty\n  FROM dwh_dwd.dwd_crm_contract_vehicle_di\n  WHERE contract_deleted = 0\n  GROUP BY contract_id\n),\nd AS (\n  SELECT cl.contract_id,\n         DATE(cl.contract_create_time)            AS stat_date,\n         COALESCE(cl.listed_province_name, '')    AS province,\n         CASE WHEN MAX(mp.qty) IS NULL\n              THEN FLOOR(SUM(cl.claim_amount) / NULLIF(MAX(mp.max_dep), 0))\n              ELSE LEAST(\n                FLOOR(SUM(cl.claim_amount) / NULLIF(MAX(mp.max_dep), 0)),\n                MAX(mp.qty)\n              )\n         END AS deposit_vehicles\n  FROM dwh_dwd.dwd_crm_deposit_claim_di cl\n  LEFT JOIN mp ON cl.contract_id = mp.contract_id\n  WHERE cl.bill_status = 2\n    AND cl.receive_type = 1\n    AND cl.contract_sign_state = 4\n  GROUP BY cl.contract_id,\n           DATE(cl.contract_create_time),\n           COALESCE(cl.listed_province_name, '')\n)\nSELECT * FROM d"
+  dimensions:
+  - name: deposit_date
+    title: 定金统计时间
+    sql: stat_date
+    type: time
+    description: '[PRD T01] 定金统计时间'
+  - name: deposit_province
+    title: 省份
+    sql: province
+    type: string
+    description: '[PRD T03] 省份'
+  measures:
+  - name: deposit_vehicle_count
+    title: 已收定金车辆数
+    sql: deposit_vehicles
+    type: sum
+    description: '[PRD K02] 已缴纳定金的车辆台数（按定金金额折算），仅国内业务适用 ｜ 口径：按合同换算 FLOOR(认领金额合计 ÷ 单台最高定金)，以合同车辆数为上限；仅国内 ｜ 单位：台 ｜ 粒度：集团/区域'
+    meta:
+      atomic: deposit_qty
+      grain: 合同×统计日×省份
+      id: K02
+      layer: DWD
+      metric_id: SL.K02.CN
+      owner: 销售业务组
+      prd: K02
+      region: 国内
+      source_table: dwh_dwd.dwd_crm_contract_vehicle_di
+      synonyms:
+      - 定金数
+      - 已收定金
+      - 定金车辆
+      - 定金台数
+      - 收了多少定金
+      - 定金车
+      - 定金
+      - 订金
+      usage: 定金口径
+      version: v1.0
+- name: delivery
+  title: 整车交货单明细
+  description: 整车交货单明细（粒度：交货单 × 车辆）
+  sql: SELECT * FROM dwh_dwd.dwd_crm_delivery_vehicle_di
+  dimensions:
+  - name: sign_date
+    title: 签收时间
+    sql: sign_date
+    type: time
+    description: '[PRD T01] 签收时间'
+  - name: delivery_province
+    title: 省份
+    sql: listed_province_name
+    type: string
+    description: '[PRD T03] 省份'
+  - name: delivery_province_region
+    title: 区域
+    sql: listed_province_name
+    type: string
+    description: '[PRD T03] 区域'
+  measures:
+  - name: signed_delivery_count
+    title: 已签收交货单车辆数（国内）
+    sql: quantity
+    type: sum
+    description: '[PRD K03] 客户已实际签收的车辆数，反映交付完成情况。K03 国内侧口径 ｜ 口径：交货单 sign_status IN (2,3) 且 delivery_sign_type=0 且 sign_state=4 ｜ 单位：台 ｜ 粒度：集团/区域/省份'
+    meta:
+      atomic: delivery_qty
+      grain: 交货单×车辆
+      id: K03
+      layer: DWD
+      metric_id: SL.K03.CN
+      owner: 销售业务组
+      prd: K03（国内签收）/ 海外交付
+      region: 国内
+      source_table: dwh_dwd.dwd_crm_delivery_vehicle_di
+      synonyms:
+      - 已交付
+      - 已签收
+      - 交车数
+      - 实际交付
+      - 签收数
+      - 交了多少台
+      - 交付量
+      - 交付台数
+      - 交付
+      - 交车
+      - 签收
+      usage: 签收口径
+      version: v1.0
+    filters:
+    - sql: '{CUBE}.sign_status IN (2,3) AND delivery_sign_type = 0 AND sign_state = 4'
+  - name: finance_confirm_count
+    title: 财务确收车辆数
+    sql: CASE WHEN sign_status = 2 THEN quantity WHEN sign_status = 3 THEN -ABS(quantity) ELSE 0 END
+    type: sum
+    description: '[PRD K04] 财务已确认收入的车辆数，区别于 WMS 实际交车口径 ｜ 口径：签收量 − 退车量差额（逐日对账确认的真值口径） ｜ 单位：台 ｜ 粒度：集团/区域'
+    meta:
+      atomic: finance_confirm_qty
+      grain: 交货单×车辆
+      id: K04
+      layer: DWD
+      metric_id: SL.K04.CN
+      owner: 财务/销售业务组
+      prd: K04
+      region: 国内
+      source_table: dwh_dwd.dwd_crm_delivery_vehicle_di
+      synonyms:
+      - 确收数
+      - 财务确认
+      - 收入确认
+      - 已确认收入
+      - 确收台数
+      - 确认收入多少台
+      - 确收
+      - 财务
+      usage: 确收口径
+      version: v1.0
+    filters:
+    - sql: '{CUBE}.sign_status IN (2,3)'
+- name: mileage_range
+  title: 行驶里程区间分布
+  description: 行驶里程区间分布（粒度：里程区间）
+  sql: SELECT * FROM dwh_dws.dws_crm_vehicle_mileage_range
+  dimensions:
+  - name: mileage_range
+    title: 行驶里程区间
+    sql: mileage_range
+    type: string
+    description: '[PRD T06] 行驶里程区间 | ⚠️ 档位以数仓现成表为准：0-20 / 20-40 / 40-60 / 60-80 / 80-100 / 100以上（万KM）。
+
+      PRD 细分档（0-0.5万KM 等）数仓做不出来 —— 用户问 0-5000KM 这类细分档时，
+
+      如实说明"以数仓现成档位为准"，给出 0-20万KM 档数据。
+
+      该表**无其他维度**，不能与省份/行业交叉。'
+  measures:
+  - name: mileage_vehicle_count
+    title: 行驶车辆数
+    sql: vehicle_count
+    type: sum
+    description: '[PRD K07] 各行驶里程区间内的车辆数量（K06 行驶里程分布） ｜ 口径：按行驶里程区间统计车辆数（数仓现成 6 档） ｜ 单位：台'
+    meta:
+      atomic: mileage_vehicle_qty
+      grain: 里程区间
+      id: K07
+      layer: DWS
+      metric_id: SL.MILEAGE.CN
+      owner: 销售业务组
+      prd: 里程分布（T05 里程区间）
+      region: 国内
+      source_table: dwh_dws.dws_crm_vehicle_mileage_range
+      synonyms:
+      - 行驶里程
+      - 运营里程
+      - 跑了多少公里
+      - 里程分布
+      - 里程区间
+      - 里程
+      - 行驶
+      usage: 里程口径
+      version: v1.0
+- name: abroad_contract
+  title: 海外合同车辆明细
+  description: 海外合同车辆明细（粒度：合同 × 货物明细）
+  sql: 'SELECT * FROM dwh_dwd.dwd_crm_abroad_contract_vehicle_di
+
+    WHERE contract_deleted = 0 AND approve_state = 2'
+  dimensions:
+  - name: abroad_contract_date
+    title: 合同创建时间
+    sql: contract_create_time
+    type: time
+    description: '[PRD T01] 合同创建时间'
+  - name: delivery_country_name
+    title: 交付国家
+    sql: delivery_country_name
+    type: string
+    description: '[PRD T04] 交付国家'
+  - name: abroad_industry
+    title: 行业
+    sql: industry
+    type: string
+    description: '[PRD T05] 海外行业枚举只有 4 个值（用 / 分隔）：快递快运 / 其他 / 港口 / 砂石料、水泥。 注意「砂石料、水泥」是【一个整体值】，不是两个值。 | 海外行业里「砂石料、水泥」同样是【一个整体值】（顿号连接）， filter 必须整体写 ["砂石料、水泥"]，不能拆成两个值。values 必须与枚举【逐字一致】。'
+  - name: abroad_cab_type
+    title: 驾驶室类型
+    sql: vehicle_model_name
+    type: string
+    description: '[PRD T07] 驾驶室类型'
+  - name: abroad_battery_capacity
+    title: 电池容量
+    sql: battery_capacity
+    type: string
+    description: '[PRD T02] 电池容量'
+  - name: abroad_model_code
+    title: 车型代号
+    sql: model_code
+    type: string
+    description: '[PRD T02] 车型代号'
+  measures:
+  - name: abroad_contract_vehicle_count
+    title: 合同车辆数（海外）
+    sql: quantity
+    type: sum
+    description: '[PRD K01] 海外已审批通过的合同货物数量，K01 海外侧口径 ｜ 口径：海外合同 approve_state=2（审核通过）的货物数量之和 ｜ 单位：台 ｜ 粒度：集团/国家'
+    meta:
+      atomic: contract_qty
+      grain: 合同×货物项
+      id: K01
+      layer: DWD
+      metric_id: SL.K05.AB
+      owner: 销售业务组
+      prd: K01（国内）/ K05（海外）
+      region: 海外
+      source_table: dwh_dwd.dwd_crm_abroad_contract_vehicle_di
+      synonyms:
+      - 海外合同数
+      - 海外签约
+      - 海外订单量
+      - 海外台数
+      - 国外签约
+      - 海外交付
+      usage: 签约口径
+      version: v1.0
+- name: abroad_delivery
+  title: 海外交货单明细
+  description: 海外交货单明细（粒度：交货单 × 车辆）
+  sql: 'SELECT * FROM dwh_dwd.dwd_crm_abroad_delivery_vehicle_di
+
+    WHERE delivery_deleted = 0'
+  dimensions:
+  - name: abroad_delivery_date
+    title: 交付时间
+    sql: delivery_date
+    type: time
+    description: '[PRD T01] 交付时间'
+  - name: abroad_delivery_country_name
+    title: 交付国家
+    sql: delivery_country_name
+    type: string
+    description: '[PRD T04] 交付国家'
+  measures:
+  - name: abroad_delivery_count
+    title: 海外交付单数
+    sql: delivery_id
+    type: countDistinct
+    description: '[PRD K03] 海外交付按国家归集的交货单条数。K03 海外侧口径（数据现状仅 16 行，回答时说明） ｜ 口径：交货单 delivery_deleted=0，按交付国家去重计数 ｜ 单位：单 ｜ 粒度：集团/国家'
+    meta:
+      atomic: delivery_qty
+      grain: 交货单
+      id: K03
+      layer: DWD
+      metric_id: SL.K03.AB
+      owner: 销售业务组
+      prd: K03（国内签收）/ 海外交付
+      region: 海外
+      source_table: dwh_dwd.dwd_crm_abroad_delivery_vehicle_di
+      synonyms:
+      - 海外交付
+      - 海外交车
+      - 海外签收
+      usage: 签收口径
+      version: v1.0
+views:
+- name: ds_contract_sign__contract_vehicle
+  title: 签约数据集 · contract_vehicle
+  description: 合同车辆数 / 合同份数；国内=双方已签署、海外=审核通过；按区域分列
+  cubes:
+  - join_path: contract_vehicle
+    includes: '*'
+  meta:
+    dataset: 签约数据集
+    dataset_id: ds_contract_sign
+    cube: contract_vehicle
+    members: all
+    consumers: 经营日报、Data Agent
+    governance: sales_metrics.yaml
+- name: ds_contract_sign__abroad_contract
+  title: 签约数据集 · abroad_contract
+  description: 合同车辆数 / 合同份数；国内=双方已签署、海外=审核通过；按区域分列
+  cubes:
+  - join_path: abroad_contract
+    includes: '*'
+  meta:
+    dataset: 签约数据集
+    dataset_id: ds_contract_sign
+    cube: abroad_contract
+    members: all
+    consumers: 经营日报、Data Agent
+    governance: sales_metrics.yaml
+- name: ds_deposit__deposit
+  title: 定金数据集 · deposit
+  description: 已收定金车辆数（认领成功且类型=定金/试用金转定金/意向金转定金；仅国内）
+  cubes:
+  - join_path: deposit
+    includes: '*'
+  meta:
+    dataset: 定金数据集
+    dataset_id: ds_deposit
+    cube: deposit
+    members: all
+    consumers: 销售转化看板
+    governance: sales_metrics.yaml
+- name: ds_delivery_confirm__delivery
+  title: 交付确收数据集 · delivery
+  description: 已签收交货单车辆数 / 财务确收车辆数（国内）、海外交付单数
+  cubes:
+  - join_path: delivery
+    includes: '*'
+  meta:
+    dataset: 交付确收数据集
+    dataset_id: ds_delivery_confirm
+    cube: delivery
+    members: all
+    consumers: 交付周报、Data Agent
+    governance: sales_metrics.yaml
+- name: ds_delivery_confirm__abroad_delivery
+  title: 交付确收数据集 · abroad_delivery
+  description: 已签收交货单车辆数 / 财务确收车辆数（国内）、海外交付单数
+  cubes:
+  - join_path: abroad_delivery
+    includes: '*'
+  meta:
+    dataset: 交付确收数据集
+    dataset_id: ds_delivery_confirm
+    cube: abroad_delivery
+    members: all
+    consumers: 交付周报、Data Agent
+    governance: sales_metrics.yaml
+- name: ds_mileage__mileage_range
+  title: 行驶里程数据集 · mileage_range
+  description: 行驶车辆数（按里程区间分布，国内）
+  cubes:
+  - join_path: mileage_range
+    includes: '*'
+  meta:
+    dataset: 行驶里程数据集
+    dataset_id: ds_mileage
+    cube: mileage_range
+    members: all
+    consumers: 车险/售后分析
+    governance: sales_metrics.yaml

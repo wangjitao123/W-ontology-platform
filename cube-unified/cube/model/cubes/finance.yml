@@ -1,0 +1,1145 @@
+# 本文件由 build_cube_model.py 从 finance_semantic.yaml 自动生成
+# 不要手改 —— 改 finance_semantic.yaml 然后重跑生成脚本
+
+cubes:
+- name: finance_summary
+  title: 财务指标月度汇总
+  description: 财务指标月度汇总（粒度：报表期间 × 全集团（每期一行））
+  sql: SELECT * FROM dwh_dws.dws_cdep_financial_indicator_month
+  dimensions:
+  - name: period
+    title: 报表期间
+    sql: period
+    type: string
+    description: 格式 YYYY-MM，如 2026-07
+  - name: periodDate
+    title: 报表期间(日期型)
+    sql: STR_TO_DATE(CONCAT(period, '-01'), '%Y-%m-%d')
+    type: time
+    description: 由 period 派生的 DATE，时间智能（趋势/区间）用这个
+  - name: year
+    title: 年份
+    sql: year
+    type: number
+    description: 年份
+  - name: month
+    title: 月份
+    sql: month
+    type: number
+    description: 月份
+  measures:
+  - name: total_assets
+    title: 资产总额
+    sql: total_assets / 100000000
+    type: sum
+    description: 资产总额（亿元），企业拥有或控制的全部经济资源 ｜ 单位：亿元
+    meta:
+      atomic: total_assets
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.TOTAL_ASSETS
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 总资产
+      - 资产规模
+      - 资产总计
+      usage: 报表口径
+      version: v1.0
+  - name: total_liabilities
+    title: 负债总额
+    sql: total_liabilities / 100000000
+    type: sum
+    description: 负债总额（亿元），企业需偿还的全部债务 ｜ 单位：亿元
+    meta:
+      atomic: total_liabilities
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.TOTAL_LIABILITIES
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 总负债
+      - 负债规模
+      - 负债合计
+      usage: 报表口径
+      version: v1.0
+  - name: revenue_ytd
+    title: 本年营业收入
+    sql: revenue_ytd / 100000000
+    type: sum
+    description: 【本年累计口径】本年营业收入（亿元），当年累计实现的营业总收入 ｜ 单位：亿元
+    meta:
+      atomic: revenue
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.REVENUE_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 营收(本年)
+      - 收入(本年)
+      - 销售收入
+      usage: 报表口径
+      version: v1.0
+  - name: net_profit_ytd
+    title: 本年净利润
+    sql: net_profit_ytd / 100000000
+    type: sum
+    description: 【本年累计口径】本年净利润（亿元），当年累计税后净利润（负数=亏损）；单月口径用 net_profit_month ｜ 单位：亿元
+    meta:
+      atomic: net_profit
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.NET_PROFIT_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 净利润(本年)
+      - 净利(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: net_profit_month
+    title: 本月净利润
+    sql: net_profit_month / 10000
+    type: sum
+    description: 【单月口径】本月净利润（万元），当月实现的税后净利润（负数=亏损） ｜ 单位：万元
+    meta:
+      atomic: net_profit
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.NET_PROFIT_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 净利润(本月)
+      - 当月净利润
+      usage: 报表口径
+      version: v1.0
+  - name: revenue_month
+    title: 本月营业收入
+    sql: revenue_month / 10000
+    type: sum
+    description: 【单月口径】本月营业收入（万元），当月实现的营业总收入 ｜ 单位：万元
+    meta:
+      atomic: revenue
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.REVENUE_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 营收(本月)
+      - 本月收入
+      - 当月营收
+      usage: 报表口径
+      version: v1.0
+  - name: operating_cost_month
+    title: 本月营业成本
+    sql: operating_cost_month / 10000
+    type: sum
+    description: 【单月口径】本月营业成本（万元），当月发生的营业成本 ｜ 单位：万元
+    meta:
+      atomic: operating_cost
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.OPERATING_COST_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 成本(本月)
+      - 本月成本
+      - 营业成本(本月)
+      usage: 报表口径
+      version: v1.0
+  - name: debt_ratio
+    title: 资产负债率
+    sql: debt_ratio * 100
+    type: sum
+    description: 资产负债率（%），负债占总资产的比例 ｜ 单位：%
+    meta:
+      atomic: debt_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.DEBT_RATIO
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 负债率
+      - 杠杆率
+      - 资产负债比
+      usage: 报表口径
+      version: v1.0
+  - name: interest_bearing_ratio
+    title: 有息负债率
+    sql: interest_bearing_ratio * 100
+    type: sum
+    description: 有息负债率（%），有息负债占总资产比例 ｜ 单位：%
+    meta:
+      atomic: interest_bearing_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.INTEREST_BEARING_RATIO
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 有息负债比
+      - 计息负债率
+      usage: 报表口径
+      version: v1.0
+  - name: current_ratio
+    title: 流动比率
+    sql: current_ratio
+    type: sum
+    description: 流动比率（倍），流动资产对流动负债的覆盖倍数 ｜ 单位：倍
+    meta:
+      atomic: current_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CURRENT_RATIO
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 流动比
+      - 短期偿债能力
+      usage: 报表口径
+      version: v1.0
+  - name: quick_ratio
+    title: 速动比率
+    sql: quick_ratio
+    type: sum
+    description: 速动比率（倍），剔除存货后的流动资产覆盖倍数 ｜ 单位：倍
+    meta:
+      atomic: quick_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.QUICK_RATIO
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 速动比
+      - 酸性测试比率
+      usage: 报表口径
+      version: v1.0
+  - name: ar_turnover_days
+    title: 应收账款周转天数
+    sql: ar_turnover_days
+    type: sum
+    description: 应收账款周转天数（天），应收从发生到收回的平均天数 ｜ 单位：天
+    meta:
+      atomic: ar_turnover_days
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.AR_TURNOVER_DAYS
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - DSO
+      - 回款天数
+      - 应收周转天数
+      usage: 报表口径
+      version: v1.0
+  - name: inventory_turnover_days
+    title: 存货周转天数
+    sql: inventory_turnover_days
+    type: sum
+    description: 存货周转天数（天），存货从入库到出库的平均天数 ｜ 单位：天
+    meta:
+      atomic: inventory_turnover_days
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.INVENTORY_TURNOVER_DAYS
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 存货周转
+      - 库存天数
+      usage: 报表口径
+      version: v1.0
+  - name: ap_turnover_days
+    title: 应付账款周转天数
+    sql: ap_turnover_days
+    type: sum
+    description: 应付账款周转天数（天），应付从发生到支付的平均天数 ｜ 单位：天
+    meta:
+      atomic: ap_turnover_days
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.AP_TURNOVER_DAYS
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 应付周转天数
+      - 付款天数
+      usage: 报表口径
+      version: v1.0
+  - name: cash_cycle_days
+    title: 营运资金循环天数
+    sql: cash_cycle_days
+    type: sum
+    description: 营运资金循环天数（天）= 应收周转天数+存货周转天数-应付周转天数 ｜ 单位：天
+    meta:
+      atomic: cash_cycle_days
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CASH_CYCLE_DAYS
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 资金循环
+      - 现金周期
+      - 营运资金周期
+      usage: 报表口径
+      version: v1.0
+  - name: gross_margin_month
+    title: 毛利率(本月)%
+    sql: gross_margin_month * 100
+    type: sum
+    description: 【单月口径】毛利率(本月)%，(营业收入-营业成本)/营业收入 ｜ 单位：%
+    meta:
+      atomic: gross_margin
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.GROSS_MARGIN_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 毛利率(本月)
+      - 毛利占比(本月)
+      usage: 报表口径
+      version: v1.0
+  - name: operating_margin_month
+    title: 营业利润率(本月)%
+    sql: operating_margin_month * 100
+    type: sum
+    description: 【单月口径】营业利润率(本月)%，营业利润/营业收入 ｜ 单位：%
+    meta:
+      atomic: operating_margin
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.OPERATING_MARGIN_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 营业利润率(本月)
+      - 经营利润率(本月)
+      usage: 报表口径
+      version: v1.0
+  - name: net_margin_month
+    title: 净利率(本月)%
+    sql: net_margin_month * 100
+    type: sum
+    description: 【单月口径】净利率(本月)%，净利润/营业收入 ｜ 单位：%
+    meta:
+      atomic: net_margin
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.NET_MARGIN_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 净利率(本月)
+      - 净利润率(本月)
+      usage: 报表口径
+      version: v1.0
+  - name: admin_expense_ratio_month
+    title: 管理费用占比(本月)%
+    sql: admin_expense_ratio_month * 100
+    type: sum
+    description: 【单月口径】管理费用占比(本月)%，管理费用/营业收入 ｜ 单位：%
+    meta:
+      atomic: admin_expense_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.ADMIN_EXPENSE_RATIO_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 管理费占比(本月)
+      - 管理费率(本月)
+      usage: 报表口径
+      version: v1.0
+  - name: selling_expense_ratio_month
+    title: 销售费用占比(本月)%
+    sql: selling_expense_ratio_month * 100
+    type: sum
+    description: 【单月口径】销售费用占比(本月)%，销售费用/营业收入 ｜ 单位：%
+    meta:
+      atomic: selling_expense_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.SELLING_EXPENSE_RATIO_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 销售费占比(本月)
+      - 营销费率(本月)
+      usage: 报表口径
+      version: v1.0
+  - name: rd_expense_ratio_month
+    title: 研发费用占比(本月)%
+    sql: rd_expense_ratio_month * 100
+    type: sum
+    description: 【单月口径】研发费用占比(本月)%，研发费用/营业收入 ｜ 单位：%
+    meta:
+      atomic: rd_expense_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.RD_EXPENSE_RATIO_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 研发费占比(本月)
+      - 研发费率(本月)
+      - R&D占比(本月)
+      usage: 报表口径
+      version: v1.0
+  - name: three_expense_ratio_month
+    title: 三费合计占比(本月)%
+    sql: three_expense_ratio_month * 100
+    type: sum
+    description: 【单月口径】三费合计占比(本月)%，(管理费用+销售费用+研发费用)/营业收入 ｜ 单位：%
+    meta:
+      atomic: three_expense_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.THREE_EXPENSE_RATIO_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 三费占比(本月)
+      - 期间费用率(本月)
+      usage: 报表口径
+      version: v1.0
+  - name: gross_margin_ytd
+    title: 毛利率(本年)%
+    sql: gross_margin_ytd * 100
+    type: sum
+    description: 【本年累计口径】毛利率(本年)%，本年累计毛利率 ｜ 单位：%
+    meta:
+      atomic: gross_margin
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.GROSS_MARGIN_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 毛利率(本年)
+      - 毛利率(累计)
+      usage: 报表口径
+      version: v1.0
+  - name: operating_margin_ytd
+    title: 营业利润率(本年)%
+    sql: operating_margin_ytd * 100
+    type: sum
+    description: 【本年累计口径】营业利润率(本年)% ｜ 单位：%
+    meta:
+      atomic: operating_margin
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.OPERATING_MARGIN_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 营业利润率(本年)
+      - 经营利润率(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: net_margin_ytd
+    title: 净利率(本年)%
+    sql: net_margin_ytd * 100
+    type: sum
+    description: 【本年累计口径】净利率(本年)% ｜ 单位：%
+    meta:
+      atomic: net_margin
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.NET_MARGIN_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 净利率(本年)
+      - 净利润率(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: admin_expense_ratio_ytd
+    title: 管理费用占比(本年)%
+    sql: admin_expense_ratio_ytd * 100
+    type: sum
+    description: 【本年累计口径】管理费用占比(本年)% ｜ 单位：%
+    meta:
+      atomic: admin_expense_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.ADMIN_EXPENSE_RATIO_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 管理费占比(本年)
+      - 管理费率(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: selling_expense_ratio_ytd
+    title: 销售费用占比(本年)%
+    sql: selling_expense_ratio_ytd * 100
+    type: sum
+    description: 【本年累计口径】销售费用占比(本年)% ｜ 单位：%
+    meta:
+      atomic: selling_expense_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.SELLING_EXPENSE_RATIO_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 销售费占比(本年)
+      - 营销费率(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: rd_expense_ratio_ytd
+    title: 研发费用占比(本年)%
+    sql: rd_expense_ratio_ytd * 100
+    type: sum
+    description: 【本年累计口径】研发费用占比(本年)% ｜ 单位：%
+    meta:
+      atomic: rd_expense_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.RD_EXPENSE_RATIO_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 研发费占比(本年)
+      - 研发投入比
+      usage: 报表口径
+      version: v1.0
+  - name: three_expense_ratio_ytd
+    title: 三费合计占比(本年)%
+    sql: three_expense_ratio_ytd * 100
+    type: sum
+    description: 【本年累计口径】三费合计占比(本年)% ｜ 单位：%
+    meta:
+      atomic: three_expense_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.THREE_EXPENSE_RATIO_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 三费占比(本年)
+      - 期间费用率(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: cf_operate_net
+    title: 经营性现金流净额
+    sql: cf_operate_net / 10000
+    type: sum
+    description: 经营性现金流净额（万元），经营活动现金流入减流出，反映主业造血能力 ｜ 单位：万元
+    meta:
+      atomic: cf_operate_net
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_OPERATE_NET
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 经营现金流
+      - 经营净现金流
+      usage: 报表口径
+      version: v1.0
+  - name: cf_invest_net
+    title: 投资性现金流净额
+    sql: cf_invest_net / 10000
+    type: sum
+    description: 投资性现金流净额（万元），投资活动现金流入减流出 ｜ 单位：万元
+    meta:
+      atomic: cf_invest_net
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_INVEST_NET
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 投资现金流
+      - 投资净现金流
+      usage: 报表口径
+      version: v1.0
+  - name: cf_finance_net
+    title: 筹资性现金流净额
+    sql: cf_finance_net / 10000
+    type: sum
+    description: 筹资性现金流净额（万元），筹资活动现金流入减流出 ｜ 单位：万元
+    meta:
+      atomic: cf_finance_net
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_FINANCE_NET
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 筹资现金流
+      - 融资净现金流
+      usage: 报表口径
+      version: v1.0
+  - name: cf_net_increase
+    title: 现金净增加额
+    sql: cf_net_increase / 10000
+    type: sum
+    description: 现金净增加额（万元），三类活动净现金流合计 ｜ 单位：万元
+    meta:
+      atomic: cf_net_increase
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_NET_INCREASE
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 现金净额
+      - 现金变动
+      - 现金增减
+      usage: 报表口径
+      version: v1.0
+  - name: cf_operate_inflow
+    title: 经营活动现金流入
+    sql: cf_operate_inflow / 10000
+    type: sum
+    description: 经营活动现金流入（万元），经营活动收到的现金 ｜ 单位：万元
+    meta:
+      atomic: cf_operate_inflow
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_OPERATE_INFLOW
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 经营现金流入
+      usage: 报表口径
+      version: v1.0
+  - name: cf_operate_outflow
+    title: 经营活动现金流出
+    sql: cf_operate_outflow / 10000
+    type: sum
+    description: 经营活动现金流出（万元），经营活动支出的现金 ｜ 单位：万元
+    meta:
+      atomic: cf_operate_outflow
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_OPERATE_OUTFLOW
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 经营现金流出
+      usage: 报表口径
+      version: v1.0
+  - name: cf_invest_inflow
+    title: 投资活动现金流入
+    sql: cf_invest_inflow / 10000
+    type: sum
+    description: 投资活动现金流入（万元） ｜ 单位：万元
+    meta:
+      atomic: cf_invest_inflow
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_INVEST_INFLOW
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 投资现金流入
+      usage: 报表口径
+      version: v1.0
+  - name: cf_invest_outflow
+    title: 投资活动现金流出
+    sql: cf_invest_outflow / 10000
+    type: sum
+    description: 投资活动现金流出（万元） ｜ 单位：万元
+    meta:
+      atomic: cf_invest_outflow
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_INVEST_OUTFLOW
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 投资现金流出
+      usage: 报表口径
+      version: v1.0
+  - name: cf_finance_inflow
+    title: 筹资活动现金流入
+    sql: cf_finance_inflow / 10000
+    type: sum
+    description: 筹资活动现金流入（万元） ｜ 单位：万元
+    meta:
+      atomic: cf_finance_inflow
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_FINANCE_INFLOW
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 筹资现金流入
+      - 融资流入
+      usage: 报表口径
+      version: v1.0
+  - name: cf_finance_outflow
+    title: 筹资活动现金流出
+    sql: cf_finance_outflow / 10000
+    type: sum
+    description: 筹资活动现金流出（万元） ｜ 单位：万元
+    meta:
+      atomic: cf_finance_outflow
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_FINANCE_OUTFLOW
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 筹资现金流出
+      - 融资流出
+      usage: 报表口径
+      version: v1.0
+  - name: cost_structure_selling_ratio_month
+    title: 费用结构-销售费用占比(本月)%
+    sql: selling_expense_month / NULLIF(selling_expense_month + admin_expense_month + rd_expense_month + finance_expense_month, 0) * 100
+    type: avg
+    description: 【单月口径】费用结构-销售费用占比(本月)%，销售费用占四费合计的比例（AI组合计算字段） ｜ 单位：%
+    meta:
+      atomic: cost_structure_selling_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.COST_STRUCTURE_SELLING_RATIO_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 销售费结构占比
+      usage: 报表口径
+      version: v1.0
+  - name: cost_structure_admin_ratio_month
+    title: 费用结构-管理费用占比(本月)%
+    sql: admin_expense_month / NULLIF(selling_expense_month + admin_expense_month + rd_expense_month + finance_expense_month, 0) * 100
+    type: avg
+    description: 【单月口径】费用结构-管理费用占比(本月)% ｜ 单位：%
+    meta:
+      atomic: cost_structure_admin_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.COST_STRUCTURE_ADMIN_RATIO_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 管理费结构占比
+      usage: 报表口径
+      version: v1.0
+  - name: cost_structure_rd_ratio_month
+    title: 费用结构-研发费用占比(本月)%
+    sql: rd_expense_month / NULLIF(selling_expense_month + admin_expense_month + rd_expense_month + finance_expense_month, 0) * 100
+    type: avg
+    description: 【单月口径】费用结构-研发费用占比(本月)% ｜ 单位：%
+    meta:
+      atomic: cost_structure_rd_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.COST_STRUCTURE_RD_RATIO_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 研发费结构占比
+      usage: 报表口径
+      version: v1.0
+  - name: cost_structure_finance_ratio_month
+    title: 费用结构-财务费用占比(本月)%
+    sql: finance_expense_month / NULLIF(selling_expense_month + admin_expense_month + rd_expense_month + finance_expense_month, 0) * 100
+    type: avg
+    description: 【单月口径】费用结构-财务费用占比(本月)% ｜ 单位：%
+    meta:
+      atomic: cost_structure_finance_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.COST_STRUCTURE_FINANCE_RATIO_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 财务费结构占比
+      usage: 报表口径
+      version: v1.0
+  - name: cost_structure_selling_ratio_ytd
+    title: 费用结构-销售费用占比(本年)%
+    sql: selling_expense_ytd / NULLIF(selling_expense_ytd + admin_expense_ytd + rd_expense_ytd + finance_expense_ytd, 0) * 100
+    type: avg
+    description: 【本年累计口径】费用结构-销售费用占比(本年)% ｜ 单位：%
+    meta:
+      atomic: cost_structure_selling_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.COST_STRUCTURE_SELLING_RATIO_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 销售费结构占比(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: cost_structure_admin_ratio_ytd
+    title: 费用结构-管理费用占比(本年)%
+    sql: admin_expense_ytd / NULLIF(selling_expense_ytd + admin_expense_ytd + rd_expense_ytd + finance_expense_ytd, 0) * 100
+    type: avg
+    description: 【本年累计口径】费用结构-管理费用占比(本年)% ｜ 单位：%
+    meta:
+      atomic: cost_structure_admin_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.COST_STRUCTURE_ADMIN_RATIO_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 管理费结构占比(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: cost_structure_rd_ratio_ytd
+    title: 费用结构-研发费用占比(本年)%
+    sql: rd_expense_ytd / NULLIF(selling_expense_ytd + admin_expense_ytd + rd_expense_ytd + finance_expense_ytd, 0) * 100
+    type: avg
+    description: 【本年累计口径】费用结构-研发费用占比(本年)% ｜ 单位：%
+    meta:
+      atomic: cost_structure_rd_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.COST_STRUCTURE_RD_RATIO_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 研发费结构占比(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: cost_structure_finance_ratio_ytd
+    title: 费用结构-财务费用占比(本年)%
+    sql: finance_expense_ytd / NULLIF(selling_expense_ytd + admin_expense_ytd + rd_expense_ytd + finance_expense_ytd, 0) * 100
+    type: avg
+    description: 【本年累计口径】费用结构-财务费用占比(本年)% ｜ 单位：%
+    meta:
+      atomic: cost_structure_finance_ratio
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.COST_STRUCTURE_FINANCE_RATIO_YTD
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 财务费结构占比(本年)
+      usage: 报表口径
+      version: v1.0
+  - name: cf_inflow_structure_operating_pct
+    title: 现金流流入结构-经营性占比%
+    sql: cf_operate_inflow / NULLIF(cf_operate_inflow + cf_invest_inflow + cf_finance_inflow, 0) * 100
+    type: avg
+    description: 现金流流入结构-经营性占比%，经营活动现金流入占三者合计的比例 ｜ 单位：%
+    meta:
+      atomic: cf_inflow_structure_operating_pct
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_INFLOW_STRUCTURE_OPERATING_PCT
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 经营流入占比
+      usage: 报表口径
+      version: v1.0
+  - name: cf_inflow_structure_invest_pct
+    title: 现金流流入结构-投资性占比%
+    sql: cf_invest_inflow / NULLIF(cf_operate_inflow + cf_invest_inflow + cf_finance_inflow, 0) * 100
+    type: avg
+    description: 现金流流入结构-投资性占比% ｜ 单位：%
+    meta:
+      atomic: cf_inflow_structure_invest_pct
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_INFLOW_STRUCTURE_INVEST_PCT
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 投资流入占比
+      usage: 报表口径
+      version: v1.0
+  - name: cf_inflow_structure_finance_pct
+    title: 现金流流入结构-筹资性占比%
+    sql: cf_finance_inflow / NULLIF(cf_operate_inflow + cf_invest_inflow + cf_finance_inflow, 0) * 100
+    type: avg
+    description: 现金流流入结构-筹资性占比% ｜ 单位：%
+    meta:
+      atomic: cf_inflow_structure_finance_pct
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_INFLOW_STRUCTURE_FINANCE_PCT
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 筹资流入占比
+      usage: 报表口径
+      version: v1.0
+  - name: cf_outflow_structure_operating_pct
+    title: 现金流流出结构-经营性占比%
+    sql: cf_operate_outflow / NULLIF(cf_operate_outflow + cf_invest_outflow + cf_finance_outflow, 0) * 100
+    type: avg
+    description: 现金流流出结构-经营性占比% ｜ 单位：%
+    meta:
+      atomic: cf_outflow_structure_operating_pct
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_OUTFLOW_STRUCTURE_OPERATING_PCT
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 经营流出占比
+      usage: 报表口径
+      version: v1.0
+  - name: cf_outflow_structure_invest_pct
+    title: 现金流流出结构-投资性占比%
+    sql: cf_invest_outflow / NULLIF(cf_operate_outflow + cf_invest_outflow + cf_finance_outflow, 0) * 100
+    type: avg
+    description: 现金流流出结构-投资性占比% ｜ 单位：%
+    meta:
+      atomic: cf_outflow_structure_invest_pct
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_OUTFLOW_STRUCTURE_INVEST_PCT
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 投资流出占比
+      usage: 报表口径
+      version: v1.0
+  - name: cf_outflow_structure_finance_pct
+    title: 现金流流出结构-筹资性占比%
+    sql: cf_finance_outflow / NULLIF(cf_operate_outflow + cf_invest_outflow + cf_finance_outflow, 0) * 100
+    type: avg
+    description: 现金流流出结构-筹资性占比% ｜ 单位：%
+    meta:
+      atomic: cf_outflow_structure_finance_pct
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.CF_OUTFLOW_STRUCTURE_FINANCE_PCT
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 筹资流出占比
+      usage: 报表口径
+      version: v1.0
+  - name: selling_expense_month
+    title: 销售费用(本月)
+    sql: selling_expense_month / 10000
+    type: sum
+    description: 本月销售费用绝对值（万元）；费用占比的分母项 ｜ 单位：万元
+    meta:
+      atomic: selling_expense
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.SELLING_EXPENSE_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 销售费用
+      - 本月销售费用
+      usage: 报表口径
+      version: v1.0
+  - name: admin_expense_month
+    title: 管理费用(本月)
+    sql: admin_expense_month / 10000
+    type: sum
+    description: 本月管理费用绝对值（万元） ｜ 单位：万元
+    meta:
+      atomic: admin_expense
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.ADMIN_EXPENSE_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 管理费用
+      - 本月管理费用
+      usage: 报表口径
+      version: v1.0
+  - name: rd_expense_month
+    title: 研发费用(本月)
+    sql: rd_expense_month / 10000
+    type: sum
+    description: 本月研发费用绝对值（万元） ｜ 单位：万元
+    meta:
+      atomic: rd_expense
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.RD_EXPENSE_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 研发费用
+      - 本月研发费用
+      usage: 报表口径
+      version: v1.0
+  - name: finance_expense_month
+    title: 财务费用(本月)
+    sql: finance_expense_month / 10000
+    type: sum
+    description: 本月财务费用绝对值（万元） ｜ 单位：万元
+    meta:
+      atomic: finance_expense
+      grain: 报表期间 × 全集团（每期一行）
+      layer: DWS
+      metric_id: FIN.FINANCE_EXPENSE_MONTH
+      owner: 财务组
+      prd: 财务指标体系 v1.0
+      source_table: dwh_dws.dws_cdep_financial_indicator_month
+      synonyms:
+      - 财务费用
+      - 本月财务费用
+      usage: 报表口径
+      version: v1.0
+views:
+- name: ds_balance_sheet__finance_summary
+  title: 资产负债数据集 · finance_summary
+  description: 资产/负债/偿债与周转指标（每期一行，全集团）
+  cubes:
+  - join_path: finance_summary
+    includes:
+    - ap_turnover_days
+    - ar_turnover_days
+    - current_ratio
+    - debt_ratio
+    - interest_bearing_ratio
+    - inventory_turnover_days
+    - quick_ratio
+    - total_assets
+    - total_liabilities
+  meta:
+    dataset: 资产负债数据集
+    dataset_id: ds_balance_sheet
+    cube: finance_summary
+    members: 9
+    consumers: 财务分析、Data Agent
+    governance: finance_metrics.yaml
+- name: ds_cash_flow__finance_summary
+  title: 现金流量数据集 · finance_summary
+  description: 经营/投资/筹资现金流及流入流出结构
+  cubes:
+  - join_path: finance_summary
+    includes:
+    - cf_finance_inflow
+    - cf_finance_net
+    - cf_finance_outflow
+    - cf_inflow_structure_finance_pct
+    - cf_inflow_structure_invest_pct
+    - cf_inflow_structure_operating_pct
+    - cf_invest_inflow
+    - cf_invest_net
+    - cf_invest_outflow
+    - cf_net_increase
+    - cf_operate_inflow
+    - cf_operate_net
+    - cf_operate_outflow
+    - cf_outflow_structure_finance_pct
+    - cf_outflow_structure_invest_pct
+    - cf_outflow_structure_operating_pct
+  meta:
+    dataset: 现金流量数据集
+    dataset_id: ds_cash_flow
+    cube: finance_summary
+    members: 16
+    consumers: 财务分析、Data Agent
+    governance: finance_metrics.yaml
+- name: ds_income_statement__finance_summary
+  title: 损益盈利数据集 · finance_summary
+  description: 收入/成本/利润/费用与各类利润率
+  cubes:
+  - join_path: finance_summary
+    includes:
+    - admin_expense_month
+    - admin_expense_ratio_month
+    - admin_expense_ratio_ytd
+    - cash_cycle_days
+    - cost_structure_admin_ratio_month
+    - cost_structure_admin_ratio_ytd
+    - cost_structure_finance_ratio_month
+    - cost_structure_finance_ratio_ytd
+    - cost_structure_rd_ratio_month
+    - cost_structure_rd_ratio_ytd
+    - cost_structure_selling_ratio_month
+    - cost_structure_selling_ratio_ytd
+    - finance_expense_month
+    - gross_margin_month
+    - gross_margin_ytd
+    - net_margin_month
+    - net_margin_ytd
+    - net_profit_month
+    - net_profit_ytd
+    - operating_cost_month
+    - operating_margin_month
+    - operating_margin_ytd
+    - rd_expense_month
+    - rd_expense_ratio_month
+    - rd_expense_ratio_ytd
+    - revenue_month
+    - revenue_ytd
+    - selling_expense_month
+    - selling_expense_ratio_month
+    - selling_expense_ratio_ytd
+    - three_expense_ratio_month
+    - three_expense_ratio_ytd
+  meta:
+    dataset: 损益盈利数据集
+    dataset_id: ds_income_statement
+    cube: finance_summary
+    members: 32
+    consumers: 财务分析、Data Agent
+    governance: finance_metrics.yaml

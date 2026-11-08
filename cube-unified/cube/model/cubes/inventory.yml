@@ -1,0 +1,1045 @@
+# 本文件由 build_cube_model.py 从 inventory_aging_semantic.yaml 自动生成
+# 不要手改 —— 改 inventory_aging_semantic.yaml 然后重跑生成脚本
+
+cubes:
+- name: aging_summary
+  title: 库存库龄汇总
+  description: 库存库龄汇总（粒度：记录日期 × 模块分类）
+  # 【口径修正 2026-11-08】源表按 record_date 存快照（143 个日期，2026-06-17~2026-11-07）。
+  # 不加日期过滤直接 SUM 会把 143 天累加，实测膨胀 89 倍（1,596 亿 vs 单日 17.9 亿）。
+  # 本 cube 的口径定义为「当前快照」：只取最新 record_date 一天。
+  # ⚠️ 需要看趋势/跨期对比时不能再用本 cube——那需要按 record_date 分组的独立查询。
+  sql: SELECT * FROM dwh_dws.dws_sap_inv_aging_summary_1da WHERE record_date = (SELECT MAX(record_date) FROM dwh_dws.dws_sap_inv_aging_summary_1da)
+  dimensions:
+  - name: record_date
+    title: 筛选日期
+    sql: record_date
+    type: time
+    description: '[PRD T01] 筛选日期'
+  - name: module_category
+    title: 模块分类
+    sql: module_category
+    type: string
+    description: '[PRD T02] 七大模块枚举（逐字）：三电-零部件 / 整车-零部件 / 三电-自研成品 / 整车 / B2件 / 售后 / 研发'
+  measures:
+  - name: total_stock_value
+    title: 总库存价值
+    sql: total_stock_value
+    type: sum
+    description: '[PRD K01] 当日七大模块库存总价值，反映资金占用规模 ｜ 单位：元（展示换算万元）'
+    meta:
+      atomic: total_stock_value
+      grain: 记录日期 × 模块分类
+      id: K01
+      layer: DWS
+      metric_id: INVENTORY.TOTAL_STOCK_VALUE
+      owner: 库存业务组
+      prd: K01
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      synonyms:
+      - 库存总价值
+      - 库存金额
+      - 库存资金占用
+      - 库存值多少钱
+      usage: 报表口径
+      version: v1.0
+  - name: total_stock_qty
+    title: 总库存数量
+    sql: total_stock_qty
+    type: sum
+    description: '[PRD K02] 当日七大模块库存总数量。注意台/件混合口径，按模块分组展示 ｜ 单位：台/件（混合口径，见 B03）'
+    meta:
+      atomic: total_stock_qty
+      grain: 记录日期 × 模块分类
+      id: K02
+      layer: DWS
+      metric_id: INVENTORY.TOTAL_STOCK_QTY
+      owner: 库存业务组
+      prd: K02
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      synonyms:
+      - 库存数量
+      - 库存台数件数
+      - 有多少库存
+      - XX模块有多少库存
+      usage: 报表口径
+      version: v1.0
+  - name: aging_gt_90_value
+    title: 超90天库存价值
+    sql: aging_gt_90_value
+    type: sum
+    description: '[PRD K03] 库龄>90天的库存总价值，反映慢周转库存规模 ｜ 单位：元（展示换算万元）'
+    meta:
+      atomic: aging_gt_90_value
+      grain: 记录日期 × 模块分类
+      id: K03
+      layer: DWS
+      metric_id: INVENTORY.AGING_GT_90_VALUE
+      owner: 库存业务组
+      prd: K03
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      synonyms:
+      - 超90天库存价值
+      - 超90天库存
+      - 慢周转库存价值
+      usage: 报表口径
+      version: v1.0
+  - name: aging_gt_180_value_total
+    title: 超180天库存价值
+    sql: aging_gt_180_value_total
+    type: sum
+    description: '[PRD K04] 库龄>180天的库存总价值，反映高呆滞风险库存 ｜ 单位：元（展示换算万元）'
+    meta:
+      atomic: aging_gt_180_value_total
+      grain: 记录日期 × 模块分类
+      id: K04
+      layer: DWS
+      metric_id: INVENTORY.AGING_GT_180_VALUE_TOTAL
+      owner: 库存业务组
+      prd: K04
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      synonyms:
+      - 超180天库存价值
+      - 超半年库存价值
+      - 呆滞库存价值
+      usage: 报表口径
+      version: v1.0
+  - name: aging_0_30_value
+    title: 0-30天库存价值
+    sql: aging_0_30_value
+    type: sum
+    description: 0-30天库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: aging_0_30_value
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_0_30_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_31_60_value
+    title: 31-60天库存价值
+    sql: aging_31_60_value
+    type: sum
+    description: 31-60天库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: aging_31_60_value
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_31_60_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_61_90_value
+    title: 61-90天库存价值
+    sql: aging_61_90_value
+    type: sum
+    description: 61-90天库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: aging_61_90_value
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_61_90_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_91_120_value
+    title: 91-120天库存价值
+    sql: aging_91_120_value
+    type: sum
+    description: 91-120天库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: aging_91_120_value
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_91_120_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_121_150_value
+    title: 121-150天库存价值
+    sql: aging_121_150_value
+    type: sum
+    description: 121-150天库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: aging_121_150_value
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_121_150_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_151_180_value
+    title: 151-180天库存价值
+    sql: aging_151_180_value
+    type: sum
+    description: 151-180天库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: aging_151_180_value
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_151_180_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_gt_180_value
+    title: '>180天库存价值'
+    sql: aging_gt_180_value
+    type: sum
+    description: '>180天库存价值 ｜ 单位：元（展示换算万元）'
+    meta:
+      atomic: aging_gt_180_value
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_GT_180_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_0_30_qty
+    title: 0-30天库存数量
+    sql: aging_0_30_qty
+    type: sum
+    description: 0-30天库存数量 ｜ 单位：台/件
+    meta:
+      atomic: aging_0_30_qty
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_0_30_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_31_60_qty
+    title: 31-60天库存数量
+    sql: aging_31_60_qty
+    type: sum
+    description: 31-60天库存数量 ｜ 单位：台/件
+    meta:
+      atomic: aging_31_60_qty
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_31_60_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_61_90_qty
+    title: 61-90天库存数量
+    sql: aging_61_90_qty
+    type: sum
+    description: 61-90天库存数量 ｜ 单位：台/件
+    meta:
+      atomic: aging_61_90_qty
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_61_90_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_91_120_qty
+    title: 91-120天库存数量
+    sql: aging_91_120_qty
+    type: sum
+    description: 91-120天库存数量 ｜ 单位：台/件
+    meta:
+      atomic: aging_91_120_qty
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_91_120_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_121_150_qty
+    title: 121-150天库存数量
+    sql: aging_121_150_qty
+    type: sum
+    description: 121-150天库存数量 ｜ 单位：台/件
+    meta:
+      atomic: aging_121_150_qty
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_121_150_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_151_180_qty
+    title: 151-180天库存数量
+    sql: aging_151_180_qty
+    type: sum
+    description: 151-180天库存数量 ｜ 单位：台/件
+    meta:
+      atomic: aging_151_180_qty
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_151_180_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+  - name: aging_gt_180_qty
+    title: '>180天库存数量'
+    sql: aging_gt_180_qty
+    type: sum
+    description: '>180天库存数量 ｜ 单位：台/件'
+    meta:
+      atomic: aging_gt_180_qty
+      grain: 记录日期 × 模块分类
+      layer: DWS
+      metric_id: INVENTORY.AGING_GT_180_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dws.dws_sap_inv_aging_summary_1da
+      usage: 报表口径
+      version: v1.0
+- name: vehicle_detail
+  title: 整车库龄明细
+  description: 整车库龄明细（粒度：记录日期 × 物料 × 工厂）
+  # 【口径修正 2026-11-08】整车库龄：源表按 record_date 存快照，不加日期过滤直接 SUM 会跨天累加。
+  # 本 cube 口径定义为「当前快照」：只取最新 record_date 一天。
+  # ⚠️ 趋势/跨期对比不能用本 cube，需按 record_date 分组的独立查询。
+  sql: SELECT * FROM dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da WHERE record_date = (SELECT MAX(record_date) FROM dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da)
+  dimensions:
+  - name: record_date
+    title: 筛选日期
+    sql: record_date
+    type: time
+    description: '[PRD T01] 筛选日期'
+  - name: module_category
+    title: 模块分类
+    sql: module_category
+    type: string
+    description: '[PRD T02] 固定为 整车'
+  - name: plant_code
+    title: 工厂编码
+    sql: plant_code
+    type: string
+    description: '[PRD T04] 工厂编码'
+  - name: plant_name
+    title: 工厂名称
+    sql: plant_name
+    type: string
+    description: '[PRD T04] 工厂名称'
+  - name: vehicle_model
+    title: 车型
+    sql: vehicle_model
+    type: string
+    description: '[PRD T05] 驾驶室+电池容量拼接，如「星辰404」「星途505」；无特征值命中时以物料编码兜底'
+  - name: material_code
+    title: 物料编码
+    sql: material_code
+    type: string
+    description: '[PRD T06] 物料编码'
+  - name: material_name
+    title: 物料名称
+    sql: material_name
+    type: string
+    description: '[PRD T06] 物料名称'
+  measures:
+  - name: vehicle_total_qty
+    title: 整车库存数量
+    sql: total_stock_qty
+    type: sum
+    description: '[PRD K08] 各车型库存数量（可按区间列拆开看） ｜ 单位：台'
+    meta:
+      atomic: vehicle_total_qty
+      grain: 记录日期 × 物料 × 工厂
+      id: K08
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_TOTAL_QTY
+      owner: 库存业务组
+      prd: K08
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      synonyms:
+      - 车型库存
+      - 哪款车库存多
+      - 整车库龄明细
+      - XX车型库龄数量
+      usage: 报表口径
+      version: v1.0
+  - name: vehicle_aging_0_30_qty
+    title: 整车0-30天数量
+    sql: aging_0_30_qty
+    type: sum
+    description: 整车0-30天数量 ｜ 单位：台
+    meta:
+      atomic: vehicle_aging_0_30_qty
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_AGING_0_30_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: vehicle_aging_31_60_qty
+    title: 整车31-60天数量
+    sql: aging_31_60_qty
+    type: sum
+    description: 整车31-60天数量 ｜ 单位：台
+    meta:
+      atomic: vehicle_aging_31_60_qty
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_AGING_31_60_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: vehicle_aging_61_90_qty
+    title: 整车61-90天数量
+    sql: aging_61_90_qty
+    type: sum
+    description: 整车61-90天数量 ｜ 单位：台
+    meta:
+      atomic: vehicle_aging_61_90_qty
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_AGING_61_90_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: vehicle_aging_91_120_qty
+    title: 整车91-120天数量
+    sql: aging_91_120_qty
+    type: sum
+    description: 整车91-120天数量 ｜ 单位：台
+    meta:
+      atomic: vehicle_aging_91_120_qty
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_AGING_91_120_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: vehicle_aging_121_150_qty
+    title: 整车121-150天数量
+    sql: aging_121_150_qty
+    type: sum
+    description: 整车121-150天数量 ｜ 单位：台
+    meta:
+      atomic: vehicle_aging_121_150_qty
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_AGING_121_150_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: vehicle_aging_151_180_qty
+    title: 整车151-180天数量
+    sql: aging_151_180_qty
+    type: sum
+    description: 整车151-180天数量 ｜ 单位：台
+    meta:
+      atomic: vehicle_aging_151_180_qty
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_AGING_151_180_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: vehicle_aging_gt_180_qty
+    title: 整车>180天数量
+    sql: aging_gt_180_qty
+    type: sum
+    description: 整车>180天数量 ｜ 单位：台
+    meta:
+      atomic: vehicle_aging_gt_180_qty
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_AGING_GT_180_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: vehicle_total_value
+    title: 整车库存价值
+    sql: total_stock_value
+    type: sum
+    description: 整车库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: vehicle_total_value
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.VEHICLE_TOTAL_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_vehicle_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+- name: wms_detail
+  title: 零部件库龄明细（WMS 来源）
+  description: 零部件库龄明细（WMS 来源）（粒度：记录日期 × 物料 × 工厂 × 仓库 × 模块）
+  # 【口径修正 2026-11-08】零部件库龄：源表按 record_date 存快照，不加日期过滤直接 SUM 会跨天累加。
+  # 本 cube 口径定义为「当前快照」：只取最新 record_date 一天。
+  # ⚠️ 趋势/跨期对比不能用本 cube，需按 record_date 分组的独立查询。
+  sql: SELECT * FROM dwh_dwd.dwd_sap_inv_wms_aging_detail_1da WHERE record_date = (SELECT MAX(record_date) FROM dwh_dwd.dwd_sap_inv_wms_aging_detail_1da)
+  dimensions:
+  - name: record_date
+    title: 筛选日期
+    sql: record_date
+    type: time
+    description: '[PRD T01] 筛选日期'
+  - name: module_category
+    title: 模块分类
+    sql: module_category
+    type: string
+    description: '[PRD T02] WMS 来源实际有：三电-零部件 / 整车-零部件 / 三电-自研成品 / 售后 / 研发（无 B2件、整车已剔除）'
+  - name: plant_code
+    title: 工厂编码
+    sql: plant_code
+    type: string
+    description: '[PRD T04] 工厂编码'
+  - name: plant_name
+    title: 工厂名称
+    sql: plant_name
+    type: string
+    description: '[PRD T04] 工厂名称'
+  - name: warehouse_code
+    title: 仓库编码
+    sql: warehouse_code
+    type: string
+    description: '[PRD T04] 仓库编码'
+  - name: warehouse_name
+    title: 仓库名称
+    sql: warehouse_name
+    type: string
+    description: '[PRD T04] 仓库名称'
+  - name: material_code
+    title: 物料编码
+    sql: material_code
+    type: string
+    description: '[PRD T06] 物料编码'
+  - name: material_name
+    title: 物料名称
+    sql: material_name
+    type: string
+    description: '[PRD T06] 物料名称'
+  measures:
+  - name: material_total_qty
+    title: 物料库存数量
+    sql: total_stock_qty
+    type: sum
+    description: '[PRD K09] 各物料编码在不同库龄区间的库存数量（零部件/成品，WMS 来源 5 模块） ｜ 单位：件'
+    meta:
+      atomic: material_total_qty
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      id: K09
+      layer: DWD
+      metric_id: INVENTORY.MATERIAL_TOTAL_QTY
+      owner: 库存业务组
+      prd: K09
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      synonyms:
+      - 物料库存明细
+      - XX物料库龄分布
+      - 哪个物料库存多少件
+      - 零部件-成品库龄明细
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_0_30_qty
+    title: 物料0-30天数量
+    sql: aging_0_30_qty
+    type: sum
+    description: 物料0-30天数量 ｜ 单位：件
+    meta:
+      atomic: wms_aging_0_30_qty
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_0_30_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_31_60_qty
+    title: 物料31-60天数量
+    sql: aging_31_60_qty
+    type: sum
+    description: 物料31-60天数量 ｜ 单位：件
+    meta:
+      atomic: wms_aging_31_60_qty
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_31_60_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_61_90_qty
+    title: 物料61-90天数量
+    sql: aging_61_90_qty
+    type: sum
+    description: 物料61-90天数量 ｜ 单位：件
+    meta:
+      atomic: wms_aging_61_90_qty
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_61_90_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_91_120_qty
+    title: 物料91-120天数量
+    sql: aging_91_120_qty
+    type: sum
+    description: 物料91-120天数量 ｜ 单位：件
+    meta:
+      atomic: wms_aging_91_120_qty
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_91_120_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_121_150_qty
+    title: 物料121-150天数量
+    sql: aging_121_150_qty
+    type: sum
+    description: 物料121-150天数量 ｜ 单位：件
+    meta:
+      atomic: wms_aging_121_150_qty
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_121_150_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_151_180_qty
+    title: 物料151-180天数量
+    sql: aging_151_180_qty
+    type: sum
+    description: 物料151-180天数量 ｜ 单位：件
+    meta:
+      atomic: wms_aging_151_180_qty
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_151_180_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_gt_180_qty
+    title: 物料>180天数量
+    sql: aging_gt_180_qty
+    type: sum
+    description: 物料>180天数量 ｜ 单位：件
+    meta:
+      atomic: wms_aging_gt_180_qty
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_GT_180_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_total_value
+    title: 物料库存价值
+    sql: total_stock_value
+    type: sum
+    description: 物料库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: wms_total_value
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_TOTAL_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_0_30_value
+    title: 物料0-30天价值
+    sql: aging_0_30_value
+    type: sum
+    description: 物料0-30天价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: wms_aging_0_30_value
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_0_30_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_31_60_value
+    title: 物料31-60天价值
+    sql: aging_31_60_value
+    type: sum
+    description: 物料31-60天价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: wms_aging_31_60_value
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_31_60_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_61_90_value
+    title: 物料61-90天价值
+    sql: aging_61_90_value
+    type: sum
+    description: 物料61-90天价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: wms_aging_61_90_value
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_61_90_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_91_120_value
+    title: 物料91-120天价值
+    sql: aging_91_120_value
+    type: sum
+    description: 物料91-120天价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: wms_aging_91_120_value
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_91_120_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_121_150_value
+    title: 物料121-150天价值
+    sql: aging_121_150_value
+    type: sum
+    description: 物料121-150天价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: wms_aging_121_150_value
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_121_150_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_151_180_value
+    title: 物料151-180天价值
+    sql: aging_151_180_value
+    type: sum
+    description: 物料151-180天价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: wms_aging_151_180_value
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_151_180_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+  - name: wms_aging_gt_180_value
+    title: 物料>180天价值
+    sql: aging_gt_180_value
+    type: sum
+    description: 物料>180天价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: wms_aging_gt_180_value
+      grain: 记录日期 × 物料 × 工厂 × 仓库 × 模块
+      layer: DWD
+      metric_id: INVENTORY.WMS_AGING_GT_180_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_wms_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+- name: b2b_detail
+  title: B2件库龄明细
+  description: B2件库龄明细（粒度：记录日期 × 物料 × 工厂）
+  # 【口径修正 2026-11-08】B2件库龄：源表按 record_date 存快照，不加日期过滤直接 SUM 会跨天累加。
+  # 本 cube 口径定义为「当前快照」：只取最新 record_date 一天。
+  # ⚠️ 趋势/跨期对比不能用本 cube，需按 record_date 分组的独立查询。
+  sql: SELECT * FROM dwh_dwd.dwd_sap_inv_sap_b2b_aging_detail_1da WHERE record_date = (SELECT MAX(record_date) FROM dwh_dwd.dwd_sap_inv_sap_b2b_aging_detail_1da)
+  dimensions:
+  - name: record_date
+    title: 筛选日期
+    sql: record_date
+    type: time
+    description: '[PRD T01] 筛选日期'
+  - name: module_category
+    title: 模块分类
+    sql: module_category
+    type: string
+    description: '[PRD T02] 固定为 B2件'
+  - name: plant_code
+    title: 工厂编码
+    sql: plant_code
+    type: string
+    description: '[PRD T04] 工厂编码'
+  - name: plant_name
+    title: 工厂名称
+    sql: plant_name
+    type: string
+    description: '[PRD T04] 工厂名称'
+  - name: material_code
+    title: 物料编码
+    sql: material_code
+    type: string
+    description: '[PRD T06] 物料编码'
+  - name: material_name
+    title: 物料名称
+    sql: material_name
+    type: string
+    description: '[PRD T06] 物料名称'
+  - name: supplier_name
+    title: 供应商
+    sql: supplier_name
+    type: string
+    description: 供应商
+  measures:
+  - name: b2b_total_qty
+    title: B2件库存数量
+    sql: total_stock_qty
+    type: sum
+    description: B2件各物料库存数量 ｜ 单位：件
+    meta:
+      atomic: b2b_total_qty
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.B2B_TOTAL_QTY
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_b2b_aging_detail_1da
+      synonyms:
+      - B2件库存
+      - B2件物料明细
+      usage: 报表口径
+      version: v1.0
+  - name: b2b_total_value
+    title: B2件库存价值
+    sql: total_stock_value
+    type: sum
+    description: B2件库存价值 ｜ 单位：元（展示换算万元）
+    meta:
+      atomic: b2b_total_value
+      grain: 记录日期 × 物料 × 工厂
+      layer: DWD
+      metric_id: INVENTORY.B2B_TOTAL_VALUE
+      owner: 库存业务组
+      prd: 指标体系 v1.0
+      source_table: dwh_dwd.dwd_sap_inv_sap_b2b_aging_detail_1da
+      usage: 报表口径
+      version: v1.0
+- name: aging_top5
+  title: 超90/180天物料价值TOP5（预计算）
+  description: 超90/180天物料价值TOP5（预计算）（粒度：记录日期 × 模块 × 档位 × 排名）
+  # 【口径修正 2026-11-08】库龄Top5：源表按 record_date 存快照，不加日期过滤直接 SUM 会跨天累加。
+  # 本 cube 口径定义为「当前快照」：只取最新 record_date 一天。
+  # ⚠️ 趋势/跨期对比不能用本 cube，需按 record_date 分组的独立查询。
+  sql: SELECT * FROM dwh_dws.dws_sap_inv_aging_top5_1da WHERE record_date = (SELECT MAX(record_date) FROM dwh_dws.dws_sap_inv_aging_top5_1da)
+  dimensions:
+  - name: record_date
+    title: 筛选日期
+    sql: record_date
+    type: time
+    description: '[PRD T01] 筛选日期'
+  - name: module_category
+    title: 模块分类
+    sql: module_category
+    type: string
+    description: '[PRD T02] 预计算表只覆盖 整车-零部件 / B2件 / 三电-零部件'
+  - name: material_code
+    title: 物料编码
+    sql: material_code
+    type: string
+    description: '[PRD T06] 物料编码'
+  - name: material_name
+    title: 物料名称
+    sql: material_name
+    type: string
+    description: '[PRD T06] 物料名称'
+  - name: rank_type
+    title: 库龄档位
+    sql: rank_type
+    type: string
+    description: OVER_90 = 超90天；OVER_180 = 超180天
+  - name: rank_num
+    title: 排名
+    sql: rank_num
+    type: number
+    description: 排名
+  measures:
+  - name: top5_aging_value
+    title: 超期物料价值TOP5
+    sql: aging_value
+    type: sum
+    description: '[PRD K10] 各模块下库龄>90天或>180天价值最高的前5个物料（预计算，rank_type 区分档位） ｜ 单位：元（展示换算万元）'
+    meta:
+      atomic: top5_aging_value
+      grain: 记录日期 × 模块 × 档位 × 排名
+      id: K10
+      layer: DWS
+      metric_id: INVENTORY.TOP5_AGING_VALUE
+      owner: 库存业务组
+      prd: K10
+      source_table: dwh_dws.dws_sap_inv_aging_top5_1da
+      synonyms:
+      - 超90天TOP5
+      - 超90天积压物料
+      - 超180天TOP5
+      - 超180天呆滞物料排行
+      usage: 报表口径
+      version: v1.0
+views:
+- name: ds_aging_summary__aging_summary
+  title: aging_summary 数据集 · aging_summary
+  description: 当日七大模块库存总价值，反映资金占用规模…
+  cubes:
+  - join_path: aging_summary
+    includes:
+    - aging_0_30_qty
+    - aging_0_30_value
+    - aging_121_150_qty
+    - aging_121_150_value
+    - aging_151_180_qty
+    - aging_151_180_value
+    - aging_31_60_qty
+    - aging_31_60_value
+    - aging_61_90_qty
+    - aging_61_90_value
+    - aging_91_120_qty
+    - aging_91_120_value
+    - aging_gt_180_qty
+    - aging_gt_180_value
+    - aging_gt_180_value_total
+    - aging_gt_90_value
+    - total_stock_qty
+    - total_stock_value
+  meta:
+    dataset: aging_summary 数据集
+    dataset_id: ds_aging_summary
+    cube: aging_summary
+    members: 18
+    consumers: Data Agent
+    governance: inventory_metrics.yaml
+- name: ds_vehicle_detail__vehicle_detail
+  title: vehicle_detail 数据集 · vehicle_detail
+  description: 各车型库存数量（可按区间列拆开看）…
+  cubes:
+  - join_path: vehicle_detail
+    includes:
+    - vehicle_aging_0_30_qty
+    - vehicle_aging_121_150_qty
+    - vehicle_aging_151_180_qty
+    - vehicle_aging_31_60_qty
+    - vehicle_aging_61_90_qty
+    - vehicle_aging_91_120_qty
+    - vehicle_aging_gt_180_qty
+    - vehicle_total_qty
+    - vehicle_total_value
+  meta:
+    dataset: vehicle_detail 数据集
+    dataset_id: ds_vehicle_detail
+    cube: vehicle_detail
+    members: 9
+    consumers: Data Agent
+    governance: inventory_metrics.yaml
+- name: ds_wms_detail__wms_detail
+  title: wms_detail 数据集 · wms_detail
+  description: 各物料编码在不同库龄区间的库存数量（零部件/成品，WMS 来源 5 模块）…
+  cubes:
+  - join_path: wms_detail
+    includes:
+    - material_total_qty
+    - wms_aging_0_30_qty
+    - wms_aging_0_30_value
+    - wms_aging_121_150_qty
+    - wms_aging_121_150_value
+    - wms_aging_151_180_qty
+    - wms_aging_151_180_value
+    - wms_aging_31_60_qty
+    - wms_aging_31_60_value
+    - wms_aging_61_90_qty
+    - wms_aging_61_90_value
+    - wms_aging_91_120_qty
+    - wms_aging_91_120_value
+    - wms_aging_gt_180_qty
+    - wms_aging_gt_180_value
+    - wms_total_value
+  meta:
+    dataset: wms_detail 数据集
+    dataset_id: ds_wms_detail
+    cube: wms_detail
+    members: 16
+    consumers: Data Agent
+    governance: inventory_metrics.yaml
+- name: ds_b2b_detail__b2b_detail
+  title: b2b_detail 数据集 · b2b_detail
+  description: B2件各物料库存数量…
+  cubes:
+  - join_path: b2b_detail
+    includes:
+    - b2b_total_qty
+    - b2b_total_value
+  meta:
+    dataset: b2b_detail 数据集
+    dataset_id: ds_b2b_detail
+    cube: b2b_detail
+    members: 2
+    consumers: Data Agent
+    governance: inventory_metrics.yaml
+- name: ds_aging_top5__aging_top5
+  title: aging_top5 数据集 · aging_top5
+  description: 各模块下库龄>90天或>180天价值最高的前5个物料（预计算，rank_type 区分档位）…
+  cubes:
+  - join_path: aging_top5
+    includes:
+    - top5_aging_value
+  meta:
+    dataset: aging_top5 数据集
+    dataset_id: ds_aging_top5
+    cube: aging_top5
+    members: 1
+    consumers: Data Agent
+    governance: inventory_metrics.yaml
